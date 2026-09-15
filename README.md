@@ -10,13 +10,13 @@ O projeto foi desenvolvido utilizando **exclusivamente o framework PPlay** como 
 
 ## Autores
 
--João Lucas Mesquita
+- João Lucas Mesquita
 
--Cauã Nascimento
+- Cauã Nascimento
 
-**Disciplina:** Laboratório de Desenvolvimento de Jogos
-**Instituição:** UFF - Universidade Federal Fluminense
-**Professor(a):** Esteban Clua
+- **Disciplina:** Laboratório de Desenvolvimento de Jogos
+- **Instituição:** UFF - Universidade Federal Fluminense
+- **Professor(a):** Esteban Clua
 
 ## Tecnologias utilizadas
 
