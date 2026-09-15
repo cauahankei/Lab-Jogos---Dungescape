@@ -14,6 +14,8 @@ O projeto foi desenvolvido utilizando **exclusivamente o framework PPlay** como 
 
 - Cauã Nascimento
 
+## Informações Institucionais
+
 - **Disciplina:** Laboratório de Desenvolvimento de Jogos
 - **Instituição:** UFF - Universidade Federal Fluminense
 - **Professor(a):** Esteban Clua
