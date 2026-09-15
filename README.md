@@ -11,6 +11,7 @@ O projeto foi desenvolvido utilizando **exclusivamente o framework PPlay** como 
 ## Autores
 
 -João Lucas Mesquita
+
 -Cauã Nascimento
 
 **Disciplina:** Laboratório de Desenvolvimento de Jogos
