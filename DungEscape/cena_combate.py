@@ -17,7 +17,7 @@ def asset_path(*parts):
 class CenaCombate:
     def __init__(self, window):
         self.window = window
-        self.fundo = GameImage(asset_path("assets", "Background", "fundoteste01.jpeg"))
+        self.fundo = GameImage(asset_path("assets", "Background", "background.png"))
 
         # Linha de chão compartilhada — tudo que "pisa no chão" usa essa referência
         self.chao_y = self.window.height * 0.85
