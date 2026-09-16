@@ -3,23 +3,15 @@
 from pathlib import Path
 
 from PPlay.window import Window
-from PPlay.sprite import Sprite
 from PPlay.gameimage import GameImage
 from PPlay.animation import Animation
+
+from cartas import Carta
 
 
 BASE_DIR = Path(__file__).resolve().parent
 def asset_path(*parts):
     return str(BASE_DIR.joinpath(*parts))
-
-# classe de carta, contendo as infos de cada carta, ainda n serve pra mta coisa
-# mas vai ser mto relevante em breve
-class Carta(Sprite):
-    def __init__(self, imagem, nome, custo, dano):
-        Sprite.__init__(self, asset_path(imagem))
-        self.nome = nome
-        self.custo = custo
-        self.dano = dano
 
 # Cena do combate, onde todas as imagens são carregas, é o principal até agora
 class CenaCombate:
@@ -30,7 +22,7 @@ class CenaCombate:
         # Linha de chão compartilhada — tudo que "pisa no chão" usa essa referência
         self.chao_y = self.window.height * 0.85
 
-        # --- Jogador ---
+        # --- Visual Jogador ---
         NUM_FRAMES_JOGADOR = 8
         ESCALA_JOGADOR = 6.0
 
@@ -47,7 +39,7 @@ class CenaCombate:
         y_jogador = self.chao_y - altura_final_jogador
         self.jogador.set_position(x_jogador, y_jogador)
 
-        # --- Inimigo ---
+        # --- Visual Inimigo ---
         NUM_FRAMES_INIMIGO = 4
         ESCALA_INIMIGO = 6.0
 
@@ -62,7 +54,7 @@ class CenaCombate:
         y_inimigo = self.chao_y - altura_final_inimigo
         self.inimigo.set_position(x_inimigo, y_inimigo)
 
-        # --- Mão de cartas ---
+        # --- Visual Mão de cartas ---
         ESCALA_CARTA = 1.5
         ESPACAMENTO_EXTRA = 20
 
