@@ -12,7 +12,7 @@ O projeto foi desenvolvido utilizando **exclusivamente o framework PPlay** como 
 
 - João Lucas Mesquita
 
-- Cauã Nascimento
+- Cauã da Silva Nascimento
 
 ## Informações Institucionais
 
