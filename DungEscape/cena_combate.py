@@ -115,21 +115,20 @@ class CenaCombate:
         largura_total_mao = (len(self.mao) - 1) * espacamento + self.largura_carta
         margem_esquerda = self.window.largura / 2 - largura_total_mao / 2
         topo_mao = self.window.altura - 100
-        altura_carta = self.mao[0].height * ESCALA_CARTA
 
         for i, carta in enumerate(self.mao):
             x = margem_esquerda + i * espacamento
-            angulo = ((x + largura_carta / 2)- (margem_esquerda + largura_total_mao / 2)) * -0.05
+            angulo = ((x + self.largura_carta / 2)- (margem_esquerda + largura_total_mao / 2)) * -0.05
 
             theta = math.radians(abs(angulo))
-            altura_rotacionada = (largura_carta * math.sin(theta) + altura_carta * math.cos(theta))
+            altura_rotacionada = (self.largura_carta * math.sin(theta) + self.altura_carta * math.cos(theta))
 
-            y = topo_mao + (altura_rotacionada - altura_carta) / 2
+            y = topo_mao + (altura_rotacionada - self.altura_carta) / 2
 
             carta.set_scale(ESCALA_CARTA, ESCALA_CARTA)
             carta.set_position(x, y)
             carta.set_rotation(angulo)
-            carta.y_repouso = altura_mao
+            carta.y_repouso = topo_mao
 
     # -- Posicionamento (ancorado no chão) -----------------------------------
     def _posicionar_jogador(self):
