@@ -1,5 +1,6 @@
 # biblioteca q não sei mto bem como funciona, mas resolve 
 # os problemas de achar as imagens
+import math
 from pathlib import Path
 
 from PPlay.window import Window
@@ -64,18 +65,27 @@ class CenaCombate:
             Carta(asset_path("assets", "Cartas", "carta3.png"), "Bola de Fogo", 2, 12),
         ]
 
-        for carta in self.mao:
-            carta.set_scale(ESCALA_CARTA, ESCALA_CARTA)
 
         # Mesma regra vale pra carta: .width não reflete escala, multiplica manualmente
         largura_carta = self.mao[0].width * ESCALA_CARTA
         espacamento = largura_carta + ESPACAMENTO_EXTRA
         largura_total_mao = (len(self.mao) - 1) * espacamento + largura_carta
         margem_esquerda = self.window.width / 2 - largura_total_mao / 2
-        altura_mao = self.window.height - 100
+        topo_mao = self.window.height - 100
+        altura_carta = self.mao[0].height * ESCALA_CARTA
 
         for i, carta in enumerate(self.mao):
-            carta.set_position(margem_esquerda + i * espacamento, altura_mao)
+            x = margem_esquerda + i * espacamento
+            angulo = ((x + largura_carta / 2)- (margem_esquerda + largura_total_mao / 2)) * -0.05
+
+            theta = math.radians(abs(angulo))
+            altura_rotacionada = (largura_carta * math.sin(theta) + altura_carta * math.cos(theta))
+
+            y = topo_mao + (altura_rotacionada - altura_carta) / 2
+
+            carta.set_scale(ESCALA_CARTA, ESCALA_CARTA)
+            carta.set_position(x, y)
+            carta.set_rotation(angulo)
 
     def draw(self):
         self.fundo.draw()

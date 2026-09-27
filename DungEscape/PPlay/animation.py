@@ -98,18 +98,23 @@ class Animation(GameImage):
         # Aplica transparência
         frame_surface.set_alpha(self.transparency)
         
-        # Aplica rotação
-        if self.rotation != 0:
-            frame_surface = pygame.transform.rotate(frame_surface, self.rotation)
-        
         # Aplica escala
         if self.scale_x != 1.0 or self.scale_y != 1.0:
             nova_w = max(1, int(self.width * self.scale_x))
             nova_h = max(1, int(self.height * self.scale_y))
             frame_surface = pygame.transform.scale(frame_surface, (nova_w, nova_h))
+
+        # Aplica rotação depois da escala para preservar as proporções
+        if self.rotation != 0:
+            frame_surface = pygame.transform.rotate(frame_surface, self.rotation)
         
+        # Mantém o centro lógico mesmo quando a rotação aumenta o retângulo
+        centro_x = draw_x + (self.width * self.scale_x) / 2
+        centro_y = draw_y + (self.height * self.scale_y) / 2
+        retangulo = frame_surface.get_rect(center=(centro_x, centro_y))
+
         # Desenha apenas o pedaço (frame) transformado no buffer virtual
-        Window.get_screen().blit(frame_surface, (draw_x, draw_y))
+        Window.get_screen().blit(frame_surface, retangulo)
 
     def play(self): self.rodando = True
     def stop(self): self.rodando = False; self.frame_atual = 0
