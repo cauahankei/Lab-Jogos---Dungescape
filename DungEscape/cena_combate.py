@@ -10,9 +10,6 @@ from cartas import criar_corte_basico, criar_escudo
 from combatente import Player, inimigo1
 from ator import AtorAnimado
 
-# quanto a carta sobe (em pixels) e quao rapido ela sobe/desce quando o mouse passa por cima
-ALTURA_HOVER = 40
-VELOCIDADE_HOVER = 12
 
 # Cena do combate, onde todas as imagens são carregas, é o principal até agora
 class CenaCombate:
@@ -143,11 +140,10 @@ class CenaCombate:
         self.fundo.draw()
         dt = self.window.delta_time()
 
-        # --- Processa o input das cartas PRIMEIRO: se algo mudar aqui
-        # (dano, animação de ataque/reação/morte), o resto do draw() já
-        # desenha o estado atualizado neste MESMO frame, sem 1 frame de
-        # atraso nas animações/barras (o desenho das cartas em si fica lá
-        # embaixo, por cima de tudo). ---
+
+        # quanto a carta sobe (em pixels) e quao rapido ela sobe/desce quando o mouse passa por cima
+        ALTURA_HOVER = 40
+        VELOCIDADE_HOVER = 12
         for carta in self.mao:
             if self.inimigo1_ativo:
                 sobre_carta = self._mouse_sobre_carta(carta)

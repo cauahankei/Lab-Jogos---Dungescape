@@ -27,18 +27,6 @@ class Carta(Sprite):
 # ================================================================
 # CARTAS DE TESTE DO PLAYER (valores genericos, sem balanceamento)
 # ================================================================
-# GDD 3.3 define os TIPOS mas nao os valores:
-#   "Ataque: Causa X dano na vida do inimigo"
-#   "Defesa: Adiciona X de escudo na vida do Personagem"
-# entao custo/dano/escudo abaixo sao só números redondos pra testar o
-# combate -- ajustar isso junto do resto do baralho no balanceamento.
-#
-# São funções (e não cartas já prontas) de propósito: Carta carrega uma
-# imagem (Sprite), e isso só pode ser carregado depois que a Window já
-# existir -- se instanciássemos a Carta aqui, no carregamento do módulo,
-# ela tentaria carregar a imagem antes da Window existir e quebraria.
-# Por isso: chame criar_corte_basico()/criar_escudo() só depois de já
-# ter criado a Window (é exatamente o que cena_combate.py já faz).
 
 def criar_corte_basico():
     return Carta(asset_path("assets", "Cartas", "carta1.png"), "Corte Básico", custo=1, dano=6)
