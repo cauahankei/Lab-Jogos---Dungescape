@@ -31,7 +31,7 @@ O projeto foi desenvolvido utilizando **exclusivamente o framework PPlay** como 
 > Marque conforme for implementando ao longo do desenvolvimento.
 
 - [x] Tela de composição de combate (fundo, personagem, inimigo, mão de cartas)
-- [ ] Sistema de combate por turnos (vida, bloqueio, dano)
+- [x] Sistema de combate por turnos (vida, bloqueio, dano)
 - [ ] Sistema de cartas (ataque, defesa, habilidades)
 - [ ] Interação de jogar cartas (clique/arraste)
 - [ ] Intenção de ataque dos inimigos
