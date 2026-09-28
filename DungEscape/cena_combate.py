@@ -43,6 +43,13 @@ class CenaCombate:
 
         self._posicionar_barras()
 
+        # passar_turno
+        self.botao_passar_turno = GameImage(asset_path("assets","hud","botao_passar_turno_new.png"))
+        self.botao_passar_turno.set_position(
+            self.window.width - self.botao_passar_turno.width - 30,
+            self.window.height - self.botao_passar_turno.height - 10)
+
+
         # --- Visual Mão de cartas ---
         ESCALA_CARTA = 1.5
         ESPACAMENTO_EXTRA = 20
@@ -153,6 +160,15 @@ class CenaCombate:
                 if sobre_carta and self.window.mouse.button_down(1):
                     self._jogar_carta(carta)
 
+        mouse = self.window.mouse
+        if (
+            mouse.is_over_object(self.botao_passar_turno)
+            and mouse.button_down(mouse.LEFT)
+        ):
+            self.passarturno()
+
+        self.botao_passar_turno.draw()
+
         self.jogador.update()
         self.jogador.draw()
 
@@ -172,12 +188,6 @@ class CenaCombate:
         # --- Cartas: só o desenho agora (o input já foi tratado lá em cima) ---
         for carta in self.mao:
             carta.draw()
-
-        #teste para achar posições de cada pixel, não é parte do jogo, apenas para debug
-        if self.window.mouse.button_down(1):
-            x, y = self.window.mouse.get_position()
-            print(f"Clique em: ({x}, {y})")
-
 
 if __name__ == "__main__":
     janela = Window(1280, 720, "Teste de Composição")

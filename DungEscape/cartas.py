@@ -1,7 +1,6 @@
 from PPlay.sprite import Sprite
 from utils import asset_path
 
-
 # classe de carta, contendo as infos de cada carta.
 # alem do dano, agora ela tambem pode dar escudo (pra cartas de defesa
 # tipo "Escudo") -- uma carta pode ter os dois ao mesmo tempo tb, pra
@@ -23,14 +22,12 @@ class Carta(Sprite):
         if self.escudo > 0:
             usuario.recebe_escudo(self.escudo)
 
-
 # ================================================================
 # CARTAS DE TESTE DO PLAYER (valores genericos, sem balanceamento)
 # ================================================================
 
 def criar_corte_basico():
     return Carta(asset_path("assets", "Cartas", "carta1.png"), "Corte Básico", custo=1, dano=6)
-
 
 def criar_escudo():
     return Carta(asset_path("assets", "Cartas", "carta2.png"), "Escudo", custo=1, escudo=5)

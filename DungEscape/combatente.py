@@ -32,7 +32,7 @@ class Combatente:
 # ================================================================
 
 class inimigo1(Combatente):
-    def __init__(self, nome="inimigo1", vida=8, dano_ataque=99):
+    def __init__(self, nome="inimigo1", vida=8, dano_ataque=7):
         super().__init__(nome=nome, vida=vida, vida_max=vida)
         self.dano_ataque = dano_ataque
 
@@ -61,6 +61,9 @@ class Player(Combatente):
         super().start_turno()
         self.ap = self.ap_max
 
+
+
+#apenas para testes direto no terminal, não faz nada quando importado, apenas quando esse codigo é rodado diretamente
 if __name__ == "__main__":
     jogador = Player()
     inimigo = inimigo1()
@@ -70,3 +73,4 @@ if __name__ == "__main__":
     
     print("retorno:", retorno)
     print("vida:", jogador.vida, "| escudo:", jogador.escudo)
+    print("tá vivo?", jogador.is_alive())
