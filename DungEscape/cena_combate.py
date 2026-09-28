@@ -7,7 +7,7 @@ from PPlay.gameimage import GameImage
 from PPlay.uikit import ProgressBar
 #autoral
 from cartas import criar_corte_basico, criar_escudo
-from combatente import Player, Goblin
+from combatente import Player, inimigo1
 from ator import AtorAnimado
 
 # quanto a carta sobe (em pixels) e quao rapido ela sobe/desce quando o mouse passa por cima
@@ -25,14 +25,14 @@ class CenaCombate:
 
         # Fichas de combate (dados logicos: vida, escudo, AP, dano)
         self.status_jogador = Player()
-        self.status_goblin = Goblin()
+        self.status_inimigo1 = inimigo1()
 
 
         self.jogador = AtorAnimado("player", self.window.largura * 0.2, self.chao_y)
-        self.goblin = AtorAnimado("goblin", self.window.largura * 0.8, self.chao_y, virado_para_esquerda=True)
+        self.inimigo1 = AtorAnimado("goblin", self.window.largura * 0.8, self.chao_y, virado_para_esquerda=True)
 
 
-        self.goblin_ativo = True
+        self.inimigo1_ativo = True
 
         # --- Barras de vida/energia (PPlay.uikit.ProgressBar) ---
         self.barra_vida_jogador = ProgressBar(150, 14, cor_barra=(90, 190, 90), cor_fundo=(35, 20, 20))
@@ -41,8 +41,8 @@ class CenaCombate:
         self.barra_ap_jogador = ProgressBar(90, 10, cor_barra=(80, 140, 230), cor_fundo=(20, 20, 40))
         self.barra_ap_jogador.valor_max = self.status_jogador.ap_max
 
-        self.barra_vida_goblin = ProgressBar(120, 12, cor_barra=(190, 60, 60), cor_fundo=(30, 15, 15))
-        self.barra_vida_goblin.valor_max = self.status_goblin.vida_max
+        self.barra_vida_inimigo1 = ProgressBar(120, 12, cor_barra=(190, 60, 60), cor_fundo=(30, 15, 15))
+        self.barra_vida_inimigo1.valor_max = self.status_inimigo1.vida_max
 
         self._posicionar_barras()
 
@@ -82,7 +82,7 @@ class CenaCombate:
 
     # Posição das barras é FIXA (baseada no Idle de cada um) -- não usa a
     # altura da animação atual, senão elas ficariam pulando de lugar toda
-    # vez que o player ataca ou o goblin reage/morre.
+    # vez que o player ataca ou o inimigo1 reage/morre.
     def _posicionar_barras(self):
         centro_x_jogador = self.jogador.x_centro
         topo_jogador = self.jogador.topo_idle()
@@ -93,10 +93,10 @@ class CenaCombate:
         self.barra_ap_jogador.set_position(
             centro_x_jogador - self.barra_ap_jogador.width / 2, topo_jogador - 18)
 
-        centro_x_goblin = self.goblin.x_centro
-        topo_goblin = self.goblin.topo_idle()
-        self.barra_vida_goblin.set_position(
-            centro_x_goblin - self.barra_vida_goblin.width / 2, topo_goblin - 24
+        centro_x_inimigo1 = self.inimigo1.x_centro
+        topo_inimigo1 = self.inimigo1.topo_idle()
+        self.barra_vida_inimigo1.set_position(
+            centro_x_inimigo1 - self.barra_vida_inimigo1.width / 2, topo_inimigo1 - 24
         )
 
     def _mouse_sobre_carta(self, carta):
@@ -108,12 +108,12 @@ class CenaCombate:
 
     # aplica o efeito da carta jogada: dispara a animação de ataque do
     # player quando a carta causa dano, aplica o efeito na ficha, e então
-    # decide a reação do Goblin -- morre (se a vida zerou) ou leva um
+    # decide a reação do inimigo1 -- morre (se a vida zerou) ou leva um
     # Take Hit (se sobreviveu ao golpe) -- ao mesmo tempo que o player
     # ainda está no meio do próprio golpe.
     def _jogar_carta(self, carta):
-        if not self.goblin_ativo:
-            return  # combate encerrado (goblin morto/morrendo): nada mais pode ser jogado
+        if not self.inimigo1_ativo:
+            return  # combate encerrado (inimigo1 morto/morrendo): nada mais pode ser jogado
 
         if not self.status_jogador.gasta_ap(carta.custo):
             print(f"AP insuficiente para jogar {carta.nome}!")
@@ -122,22 +122,22 @@ class CenaCombate:
         if carta.dano > 0:
             self.jogador.tocar("attack")
 
-        carta.usar(self.status_jogador, self.status_goblin)
+        carta.usar(self.status_jogador, self.status_inimigo1)
 
         print(
             f"{carta.nome} usada -> "
             f"Jogador: HP={self.status_jogador.vida}/{self.status_jogador.vida_max} "
             f"Escudo={self.status_jogador.escudo} "
             f"AP={self.status_jogador.ap}/{self.status_jogador.ap_max} | "
-            f"Goblin: HP={self.status_goblin.vida}/{self.status_goblin.vida_max}"
+            f"Goblin: HP={self.status_inimigo1.vida}/{self.status_inimigo1.vida_max}"
         )
 
         if carta.dano > 0:
-            if not self.status_goblin.is_alive():
-                self.goblin.tocar("death")
-                self.goblin_ativo = False
+            if not self.status_inimigo1.is_alive():
+                self.inimigo1.tocar("death")
+                self.inimigo1_ativo = False
             else:
-                self.goblin.tocar("takehit")
+                self.inimigo1.tocar("takehit")
 
     def draw(self):
         self.fundo.draw()
@@ -149,7 +149,7 @@ class CenaCombate:
         # atraso nas animações/barras (o desenho das cartas em si fica lá
         # embaixo, por cima de tudo). ---
         for carta in self.mao:
-            if self.goblin_ativo:
+            if self.inimigo1_ativo:
                 sobre_carta = self._mouse_sobre_carta(carta)
                 alvo_y = carta.y_repouso - ALTURA_HOVER if sobre_carta else carta.y_repouso
                 carta.y += (alvo_y - carta.y) * min(1, VELOCIDADE_HOVER * dt)
@@ -160,8 +160,8 @@ class CenaCombate:
         self.jogador.update()
         self.jogador.draw()
 
-        self.goblin.update()
-        self.goblin.draw()
+        self.inimigo1.update()
+        self.inimigo1.draw()
         
         # --- Barras de vida/energia ---
         self.barra_vida_jogador.set_value(self.status_jogador.vida)
@@ -169,9 +169,9 @@ class CenaCombate:
         self.barra_vida_jogador.draw()
         self.barra_ap_jogador.draw()
 
-        if self.goblin_ativo:
-            self.barra_vida_goblin.set_value(self.status_goblin.vida)
-            self.barra_vida_goblin.draw()
+        if self.inimigo1_ativo:
+            self.barra_vida_inimigo1.set_value(self.status_inimigo1.vida)
+            self.barra_vida_inimigo1.draw()
 
         # --- Cartas: só o desenho agora (o input já foi tratado lá em cima) ---
         for carta in self.mao:
