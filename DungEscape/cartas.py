@@ -1,9 +1,5 @@
-from pathlib import Path
 from PPlay.sprite import Sprite
-
-BASE_DIR = Path(__file__).resolve().parent
-def asset_path(*parts):
-    return str(BASE_DIR.joinpath(*parts))
+from utils import asset_path
 
 
 # classe de carta, contendo as infos de cada carta.
