@@ -27,7 +27,7 @@ class Carta(Sprite):
 # ================================================================
 
 def criar_corte_basico():
-    return Carta(asset_path("assets", "Cartas", "carta1.png"), "Corte Básico", custo=1, dano=6)
+    return Carta(asset_path("assets", "Cartas", "carta1.png"), "Corte Básico", custo=2, dano=5)
 
 def criar_escudo():
     return Carta(asset_path("assets", "Cartas", "carta2.png"), "Escudo", custo=1, escudo=5)

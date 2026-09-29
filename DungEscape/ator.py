@@ -8,13 +8,15 @@ ANIMACOES = {
             "idle":    {"arquivo": ("assets", "Goblin", "Idle.png"),    "frames": 4, "duracao": 600, "loop": True},
             "takehit": {"arquivo": ("assets", "Goblin", "TakeHit.png"), "frames": 4, "duracao": 400, "loop": False, "depois": "idle"},
             "death":   {"arquivo": ("assets", "Goblin", "Death.png"),   "frames": 4, "duracao": 500, "loop": False},
+            "attack":  {"arquivo": ("assets", "Goblin", "Attack.png"), "frames": 8, "duracao": 500, "loop": False, "depois": "idle"}
         },
     },
     "player": {
         "escala": 6.0,
         "animacoes": {
-            "idle":   {"arquivo": ("assets", "Player", "Idle.png"),    "frames": 8, "duracao": 600, "loop": True},
-            "attack": {"arquivo": ("assets", "Player", "Attack1.png"), "frames": 4, "duracao": 400, "loop": False, "depois": "idle"},
+            "idle":    {"arquivo": ("assets", "Player", "Idle.png"),    "frames": 8, "duracao": 600, "loop": True},
+            "attack":  {"arquivo": ("assets", "Player", "Attack1.png"), "frames": 4, "duracao": 400, "loop": False, "depois": "idle"},
+            "takehit": {"arquivo": ("assets", "Player", "TakeHit_Silhouette.png"), "frames": 4, "duracao": 400, "loop": False, "depois": "idle"},
         },
     },
 }

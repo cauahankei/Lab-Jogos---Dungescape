@@ -31,8 +31,8 @@ class Combatente:
 # Tipos de combatente ("subclasses")
 # ================================================================
 
-class inimigo1(Combatente):
-    def __init__(self, nome="inimigo1", vida=8, dano_ataque=7):
+class Inimigo1(Combatente):
+    def __init__(self, nome="inimigo1", vida=20, dano_ataque=15):
         super().__init__(nome=nome, vida=vida, vida_max=vida)
         self.dano_ataque = dano_ataque
 

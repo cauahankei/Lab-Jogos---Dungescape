@@ -7,8 +7,9 @@ from PPlay.gameimage import GameImage
 from PPlay.uikit import ProgressBar
 #autoral
 from cartas import criar_corte_basico, criar_escudo
-from combatente import Player, inimigo1
+from combatente import Player, Inimigo1
 from ator import AtorAnimado
+from gerenciador_combate import GerenciadorCombate
 
 
 # Cena do combate, onde todas as imagens são carregas, é o principal até agora
@@ -22,7 +23,10 @@ class CenaCombate:
 
         # Fichas de combate (dados logicos: vida, escudo, AP, dano)
         self.status_jogador = Player()
-        self.status_inimigo1 = inimigo1()
+        self.status_inimigo1 = Inimigo1()
+        self.gerenciador = GerenciadorCombate(
+            self.status_jogador, [self.status_inimigo1]
+        )
 
 
         self.jogador = AtorAnimado("player", self.window.largura * 0.2, self.chao_y)
@@ -30,6 +34,8 @@ class CenaCombate:
 
 
         self.inimigo1_ativo = True
+        self._takehit_pendente = False
+        self._timer_takehit = 0.0
 
         # --- Barras de vida/energia (PPlay.uikit.ProgressBar) ---
         self.barra_vida_jogador = ProgressBar(150, 14, cor_barra=(90, 190, 90), cor_fundo=(35, 20, 20))
@@ -103,6 +109,21 @@ class CenaCombate:
             centro_x_inimigo1 - self.barra_vida_inimigo1.width / 2, topo_inimigo1 - 24
         )
 
+    def passarturno(self):
+        if not self.inimigo1_ativo or self.gerenciador.estado != "turno_jogador":
+            return
+
+        self.gerenciador.terminar_turno_jogador()
+        inimigos_agiram = bool(self.gerenciador.fila)
+        self.gerenciador.turno_inimigos()
+
+        if inimigos_agiram and self.status_jogador.is_alive():
+            self._takehit_pendente = True
+            self._timer_takehit = 0.25
+
+        if inimigos_agiram and self.inimigo1_ativo:
+            self.inimigo1.tocar("attack")
+
     def _mouse_sobre_carta(self, carta):
         mx, my = self.window.mouse.get_position()
         return (
@@ -116,28 +137,33 @@ class CenaCombate:
     # Take Hit (se sobreviveu ao golpe) -- ao mesmo tempo que o player
     # ainda está no meio do próprio golpe.
     def _jogar_carta(self, carta):
-        if not self.inimigo1_ativo:
-            return  # combate encerrado (inimigo1 morto/morrendo): nada mais pode ser jogado
-
-        if not self.status_jogador.gasta_ap(carta.custo):
-            print(f"AP insuficiente para jogar {carta.nome}!")
+        if (
+            not self.inimigo1_ativo
+            or self.gerenciador.estado != "turno_jogador"
+        ):
             return
+
+        resultado = self.gerenciador.jogar_carta(carta)
+        if not resultado["sucesso"]:
+            if resultado["motivo"] == "ap_insuficiente":
+                print(f"AP insuficiente para jogar {carta.nome}!")
+            return
+
+        alvo = resultado["alvo"]
 
         if carta.dano > 0:
             self.jogador.tocar("attack")
-
-        carta.usar(self.status_jogador, self.status_inimigo1)
 
         print(
             f"{carta.nome} usada -> "
             f"Jogador: HP={self.status_jogador.vida}/{self.status_jogador.vida_max} "
             f"Escudo={self.status_jogador.escudo} "
             f"AP={self.status_jogador.ap}/{self.status_jogador.ap_max} | "
-            f"Goblin: HP={self.status_inimigo1.vida}/{self.status_inimigo1.vida_max}"
+            f"Goblin: HP={alvo.vida}/{alvo.vida_max}"
         )
 
         if carta.dano > 0:
-            if not self.status_inimigo1.is_alive():
+            if not alvo.is_alive():
                 self.inimigo1.tocar("death")
                 self.inimigo1_ativo = False
             else:
@@ -147,22 +173,32 @@ class CenaCombate:
         self.fundo.draw()
         dt = self.window.delta_time()
 
+        if self._takehit_pendente:
+            self._timer_takehit -= dt
+            if self._timer_takehit <= 0:
+                self.jogador.tocar("takehit")
+                self._takehit_pendente = False
 
-        # quanto a carta sobe (em pixels) e quao rapido ela sobe/desce quando o mouse passa por cima
-        ALTURA_HOVER = 40
-        VELOCIDADE_HOVER = 12
+        altura_hover = 40
+        velocidade_hover = 12
         for carta in self.mao:
-            if self.inimigo1_ativo:
+            if (
+                self.inimigo1_ativo
+                and self.gerenciador.estado == "turno_jogador"
+                and not self._takehit_pendente
+            ):
                 sobre_carta = self._mouse_sobre_carta(carta)
-                alvo_y = carta.y_repouso - ALTURA_HOVER if sobre_carta else carta.y_repouso
-                carta.y += (alvo_y - carta.y) * min(1, VELOCIDADE_HOVER * dt)
+                alvo_y = carta.y_repouso - altura_hover if sobre_carta else carta.y_repouso
+                carta.y += (alvo_y - carta.y) * min(1, velocidade_hover * dt)
 
                 if sobre_carta and self.window.mouse.button_down(1):
                     self._jogar_carta(carta)
 
         mouse = self.window.mouse
         if (
-            mouse.is_over_object(self.botao_passar_turno)
+            self.gerenciador.estado == "turno_jogador"
+            and not self._takehit_pendente
+            and mouse.is_over_object(self.botao_passar_turno)
             and mouse.button_down(mouse.LEFT)
         ):
             self.passarturno()
@@ -174,8 +210,7 @@ class CenaCombate:
 
         self.inimigo1.update()
         self.inimigo1.draw()
-        
-        # --- Barras de vida/energia ---
+
         self.barra_vida_jogador.set_value(self.status_jogador.vida)
         self.barra_ap_jogador.set_value(self.status_jogador.ap)
         self.barra_vida_jogador.draw()
@@ -185,9 +220,9 @@ class CenaCombate:
             self.barra_vida_inimigo1.set_value(self.status_inimigo1.vida)
             self.barra_vida_inimigo1.draw()
 
-        # --- Cartas: só o desenho agora (o input já foi tratado lá em cima) ---
         for carta in self.mao:
             carta.draw()
+
 
 if __name__ == "__main__":
     janela = Window(1280, 720, "Teste de Composição")
