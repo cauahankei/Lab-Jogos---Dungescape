@@ -43,10 +43,14 @@ class Inimigo1(Combatente):
 
 
 class Player(Combatente):
-    def __init__(self, nome="Aprendiz", vida=50, ap_max=3):
+    def __init__(self, nome="Aprendiz", vida=50, ap_max=3, baralho=None, tamanho_mao=5):
         super().__init__(nome=nome, vida=vida, vida_max=vida)
         self.ap_max = ap_max
         self.ap = ap_max
+
+        #inclui baralho e tamanho de mao na classe do player
+        self.baralho = baralho
+        self.tamanho_mao = tamanho_mao
 
     # tenta gastar AP pra jogar uma carta; devolve False sem gastar nada
     # se não tiver AP suficiente (mesmo padrão usado no resto do projeto)
@@ -56,17 +60,20 @@ class Player(Combatente):
         self.ap -= custo
         return True
 
-    # no inicio do turno, alem do escudo (que ja zerava), o AP tambem enche de novo 
+    # no inicio do turno: escudo zera, AP enche e completa a mao ate tamanho_mao
+    # (se ja tiver mais que isso, nao compra nada)
     def start_turno(self):
         super().start_turno()
         self.ap = self.ap_max
+        if self.baralho is not None:
+            self.baralho.comprar(self.tamanho_mao - len(self.baralho.mao))
 
 
 
 #apenas para testes direto no terminal, não faz nada quando importado, apenas quando esse codigo é rodado diretamente
 if __name__ == "__main__":
     jogador = Player()
-    inimigo = inimigo1()
+    inimigo = Inimigo1()
 
     jogador.recebe_escudo(10)
     retorno = inimigo.agir(jogador)
