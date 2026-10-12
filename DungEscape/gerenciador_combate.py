@@ -35,6 +35,8 @@ class GerenciadorCombate:
             return {"sucesso": False, "motivo": "ap_insuficiente"}
 
         carta.usar(self.jogador, alvo)
+        if self.jogador.baralho is not None:
+            self.jogador.baralho.descartar(carta)
 
         return {"sucesso": True, "alvo": alvo}
 
