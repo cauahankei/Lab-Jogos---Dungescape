@@ -3,27 +3,28 @@ from PPlay.sprite import Sprite
 from utils import asset_path
 import fonte_pixel
 
-
-# onde o texto vai em cima do PNG da carta
-# se um dia mudar o desenho do png, e so ajustar esses numero aqui
-
-CUSTO_CENTRO = (10, 10)     
-NOME_CENTRO_X = 39          
-NOME_TOPO_1 = 11            
-NOME_TOPO_2 = 8             
+# ---------------------------------------------------------------
+# Onde o texto cai em cima do PNG da carta (68x109, antes de escalar).
+# Se mexer na arte, é só acertar esses números.
+# ---------------------------------------------------------------
+CUSTO_CENTRO = (10, 10)     # centro do selo do custo (canto de cima, esquerda)
+NOME_CENTRO_X = 39          # centro da placa do nome
+NOME_TOPO_1 = 11            # y do nome quando cabe em 1 linha
+NOME_TOPO_2 = 8             # y da 1ª linha quando o nome tem 2
 NOME_LARGURA_MAX = 40
-DESC_CENTRO_X = 34          
-DESC_TOPO = 60              
+DESC_CENTRO_X = 34          # centro da caixa de descrição
+DESC_TOPO = 60
 DESC_ALTURA = 41
 DESC_LARGURA_MAX = 44
-SOMBRA = (30, 22, 32)       
+SOMBRA = (30, 22, 32)       # sombrinha atrás do nome
+TAMANHO_CARTA = (68, 109)    # tamanho dos PNGs
 
 
-# classe de carta, contendo as infos de cada carta
-# o PNG da carta e so a ARTE (moldura + icone + placa/selo/caixa vazios).
-# todo o texto (nome, custo, descricao) e escrito por codigo em cima dele,
-# entao quando um buff/debuff muda um valor e so chamar atualizar_texto().
-
+# O PNG é só a arte (moldura, ícone, placa e caixa vazias). Nome, custo e
+# descrição são escritos por código em cima, então buff/debuff = mudar o valor
+# e chamar atualizar_texto().
+# dano e escudo são atributos normais (o resto do jogo usa); qualquer outro
+# número da carta (comprar, retaliação, força...) vai em carta.extras["nome"].
 class Carta(Sprite):
     def __init__(self, imagem, nome, custo, dano=0, escudo=0, descricao="", **extras):
         Sprite.__init__(self, imagem)
@@ -32,18 +33,18 @@ class Carta(Sprite):
         self.dano = dano
         self.escudo = escudo
         self.extras = dict(extras)
-        self.descricao = descricao   # texto com {dano}, {escudo}, {compra}
+        self.descricao = descricao
 
-        # guarda os valores ORIGINAIS pra saber depois se o numero ta
-        # buffado (verde) ou debuffado (vermelho) na descricao
+        # valores originais, pra saber se o número tá buffado (verde) ou debuffado (vermelho)
         self.custo_base = custo
         self.base = {"dano": dano, "escudo": escudo, **extras}
 
-
+        # a engine divide a mesma imagem entre todas as cartas iguais (cache).
+        # então a arte limpa fica guardada e o texto é escrito numa cópia
         self.arte = self.image
         self.atualizar_texto()
 
-    # valor atual de um campo da descricao (dano, escudo ou extra)
+    # valor atual de um campo da descrição (dano, escudo ou extra)
     def _valor(self, campo):
         if campo == "dano":
             return self.dano
@@ -51,7 +52,7 @@ class Carta(Sprite):
             return self.escudo
         return self.extras[campo]
 
-    # deixa o numero colorido: dourado normal, verde se subiu, vermelho se caiu
+    # dourado normal, verde se subiu, vermelho se caiu
     def _numero(self, campo):
         atual, base = self._valor(campo), self.base[campo]
         if atual > base:
@@ -60,12 +61,12 @@ class Carta(Sprite):
             return f"<r{atual}>"
         return f"<{atual}>"
 
-    # redesenha nome, custo e descricao por cima da arte limpa.
-    # chama isso SEMPRE que mudar dano/escudo/custo/extras da carta
-    # (ex: depois de aplicar Forca, ou de um debuff que reduz o custo).
+    # redesenha nome, custo e descrição por cima da arte limpa.
+    # chama sempre que mudar dano/escudo/custo/extras (Força, debuff de custo...)
     def atualizar_texto(self):
         img = self.arte.copy()
 
+        # custo
         txt_custo = str(self.custo)
         cor_custo = fonte_pixel.BRANCO
         if self.custo < self.custo_base:
@@ -76,7 +77,7 @@ class Carta(Sprite):
         fonte_pixel.desenhar(img, CUSTO_CENTRO[0] - w // 2, CUSTO_CENTRO[1] - 5,
                              txt_custo, cor_custo, esc=2)
 
-
+        # nome (quebra em 2 linhas sozinho se não couber)
         linhas = fonte_pixel.quebrar(self.nome, NOME_LARGURA_MAX)
         topo = NOME_TOPO_1 if len(linhas) == 1 else NOME_TOPO_2
         for i, ln in enumerate(linhas):
@@ -84,7 +85,7 @@ class Carta(Sprite):
             fonte_pixel.desenhar(img, NOME_CENTRO_X - w // 2, topo + i * 7, ln,
                                  fonte_pixel.BRANCO, sombra=SOMBRA)
 
-
+        # descrição, com os valores de agora
         valores = {campo: self._numero(campo) for campo in self.base}
         texto = self.descricao.format(**valores)
         linhas = fonte_pixel.quebrar(texto, DESC_LARGURA_MAX)
@@ -96,9 +97,7 @@ class Carta(Sprite):
 
         self.image = img
 
-    # aplica o efeito da carta de verdade: causa dano no alvo (o inimigo)
-    # e/ou da escudo pra quem jogou a carta (o player). e por isso que a
-    # carta agora e "funcional" e nao so um dado visual.
+    # dano vai pro alvo, escudo vai pra quem jogou
     def usar(self, usuario, alvo=None):
         if self.dano > 0:
             alvo.recebe_dano(self.dano)
@@ -106,8 +105,7 @@ class Carta(Sprite):
             usuario.recebe_escudo(self.escudo)
 
 
-
-# as tres pilhas do jogador: compra, mao e descarte
+# As três pilhas do jogador: compra, mão e descarte.
 class Baralho:
     def __init__(self, cartas, limite_mao=10):
         self.compra = list(cartas)
@@ -116,8 +114,8 @@ class Baralho:
         self.limite_mao = limite_mao
         random.shuffle(self.compra)
 
-    # compra ate qnt cartas. se a pilha de compra acabar, embaralha o descarte
-    # e ele vira a nova pilha de compra. qnt <= 0 nao compra nada
+    # compra até qnt cartas; se a compra acabar, o descarte é embaralhado e
+    # vira a nova compra. qnt <= 0 não compra nada
     def comprar(self, qnt):
         for _ in range(qnt):
             if len(self.mao) >= self.limite_mao:
@@ -135,59 +133,42 @@ class Baralho:
             self.descarte.append(carta)
 
 
-def _png(nome):
-    return asset_path("assets", "Cartas", nome)
+# ---------------------------------------------------------------
+# Catálogo das cartas do GDD. Os valores são de teste (o GDD só diz "X").
+# Na descrição, {dano}/{escudo}/extras viram o número na hora, "\n" quebra
+# linha e [palavra] fica ciano.
+# As marcadas com TODO ainda só fazem dano/escudo, o efeito especial vem depois.
+# ---------------------------------------------------------------
+CARTAS = {
+    "ataque": dict(arquivo="carta_ataque.png", nome="Ataque", custo=1, dano=6,
+                   descricao="Causa {dano}\nde dano."),
+    "defesa": dict(arquivo="carta_defesa.png", nome="Defesa", custo=1, escudo=5,
+                   descricao="Ganha {escudo}\nde escudo."),
+    "foco": dict(arquivo="carta_foco.png", nome="Foco", custo=1, compra=2,                   # TODO: comprar
+                 descricao="Compra {compra}\ncartas do\nbaralho."),
+    "corte_rapido": dict(arquivo="carta_corte_rapido.png", nome="Corte Rápido", custo=0, dano=3,
+                         descricao="Causa {dano}\nde dano.\nCusto zero."),
+    "corte_duplo": dict(arquivo="carta_corte_duplo.png", nome="Corte Duplo", custo=1, dano=4,   # TODO: bater 2x
+                        descricao="Dano {dano}\nduas vezes."),
+    "contra_ataque": dict(arquivo="carta_contra_ataque.png", nome="Contra Ataque", custo=1,   # TODO: Retaliação
+                          retaliacao=4, descricao="Ao ser atacado, devolve {retaliacao} de dano."),
+    "fortalecer": dict(arquivo="carta_fortalecer.png", nome="Fortalecer", custo=1, forca=2,   # TODO: Força
+                       descricao="Ganha {forca}\nde [força].\nAtaques\ncausam +{forca}."),
+    "golpe_baixo": dict(arquivo="carta_golpe_baixo.png", nome="Golpe Baixo", custo=1, dano=6,  # TODO: Vulnerável
+                        descricao="Causa {dano}\nde dano e\naplica\n[vulnerável]."),
+    "bater_defender": dict(arquivo="carta_bater_defender.png", nome="Bater e Defender", custo=2,
+                           dano=5, escudo=5,
+                           descricao="Causa {dano}\nde dano e\nganha {escudo}\nde escudo."),
+    "golpe_pesado": dict(arquivo="carta_golpe_pesado.png", nome="Golpe Pesado", custo=2, dano=14,  # TODO: Vulnerável
+                         descricao="Causa {dano}\nde dano.\nVocê fica\n[vulnerável]."),
+}
 
 
-# aqui tão as cartas que especificamos no gdd, ainda falta fazer
-# as outras cartas além de ataque e defesa, FAHHHHHH
-def criar_ataque():
-    return Carta(_png("carta_ataque.png"), "Ataque", custo=1, dano=6,
-                 descricao="Causa {dano}\nde dano.")
-
-def criar_defesa():
-    return Carta(_png("carta_defesa.png"), "Defesa", custo=1, escudo=5,
-                 descricao="Ganha {escudo}\nde escudo.")
-
-def criar_foco():  # TODO: comprar cartas
-    return Carta(_png("carta_foco.png"), "Foco", custo=1, compra=2,
-                 descricao="Compra {compra}\ncartas do\nbaralho.")
-
-def criar_corte_rapido():
-    return Carta(_png("carta_corte_rapido.png"), "Corte Rápido", custo=0, dano=3,
-                 descricao="Causa {dano}\nde dano.\nCusto zero.")
-
-def criar_corte_duplo():  # TODO: bater 2 vezes (hoje bate 1)
-    return Carta(_png("carta_corte_duplo.png"), "Corte Duplo", custo=1, dano=4,
-                 descricao="Dano {dano}\nduas vezes.")
-
-def criar_contra_ataque():  # TODO: status Retaliacao
-    return Carta(_png("carta_contra_ataque.png"), "Contra Ataque", custo=1, retaliacao=4,
-                 descricao="Ao ser atacado, devolve {retaliacao} de dano.")
-
-def criar_fortalecer():  # TODO: status Forca
-    return Carta(_png("carta_fortalecer.png"), "Fortalecer", custo=1, forca=2,
-                 descricao="Ganha {forca}\nde [força].\nAtaques\ncausam +{forca}.")
-
-def criar_golpe_baixo():  # TODO: aplicar Vulneravel no inimigo
-    return Carta(_png("carta_golpe_baixo.png"), "Golpe Baixo", custo=1, dano=6,
-                 descricao="Causa {dano}\nde dano e\naplica\n[vulnerável].")
-
-def criar_bater_defender():
-    return Carta(_png("carta_bater_defender.png"), "Bater e Defender", custo=2, dano=5, escudo=5,
-                 descricao="Causa {dano}\nde dano e\nganha {escudo}\nde escudo.")
-
-def criar_golpe_pesado():  # TODO: aplicar Vulneravel no player
-    return Carta(_png("carta_golpe_pesado.png"), "Golpe Pesado", custo=2, dano=14,
-                 descricao="Causa {dano}\nde dano.\nVocê fica\n[vulnerável].")
+def criar_carta(id_carta):
+    dados = dict(CARTAS[id_carta])
+    arquivo = dados.pop("arquivo")
+    return Carta(asset_path("assets", "Cartas", arquivo), **dados)
 
 
-# nomes antigos, so pra cena_combate.py continuar funcionando sem mexer
-# ainda tem que mudar o cena_combate pra trocar pelos nomes novos 
-# e incluir as outras cartas man
-
-def criar_corte_basico():
-    return criar_ataque()
-
-def criar_escudo():
-    return criar_defesa()
+def deck_inicial():
+    return [criar_carta("ataque") for _ in range(5)] + [criar_carta("defesa") for _ in range(4)]

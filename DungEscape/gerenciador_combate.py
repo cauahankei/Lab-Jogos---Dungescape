@@ -1,33 +1,39 @@
-from combatente import Player, Inimigo1
-from cartas import criar_corte_basico
+# Regras do combate (de quem é a vez, quem leva o quê). Não desenha nada.
+
 
 class GerenciadorCombate:
     def __init__(self, jogador, inimigos):
         self.jogador = jogador
         self.inimigos = inimigos
-        self.estado = "turno_jogador"
-        self.fila = []
-
+        self.estado = "turno_jogador"   # ou "turno_inimigos" / "fim"
         self.jogador.start_turno()
 
     def inimigos_vivos(self):
-        vivos=[]
-        for inimigo in self.inimigos:
-            if inimigo.is_alive():
-                vivos.append(inimigo)
-        return vivos
+        return [i for i in self.inimigos if i.is_alive()]
 
-    def alvo(self):
+    # alvo que vale quando ninguém foi escolhido: o primeiro vivo
+    def alvo_padrao(self):
         vivos = self.inimigos_vivos()
-        if vivos:
-            return vivos[0]
+        return vivos[0] if vivos else None
+
+    # "vitoria", "derrota" ou None se a luta ainda tá rolando
+    def resultado(self):
+        if not self.jogador.is_alive():
+            return "derrota"
+        if not self.inimigos_vivos():
+            return "vitoria"
         return None
 
-    def jogar_carta(self, carta):
+    def _checar_fim(self):
+        if self.resultado():
+            self.estado = "fim"
+
+    def jogar_carta(self, carta, alvo=None):
         if self.estado != "turno_jogador":
             return {"sucesso": False, "motivo": "fora_do_turno"}
 
-        alvo = self.alvo()
+        if alvo is None or not alvo.is_alive():
+            alvo = self.alvo_padrao()
         if alvo is None:
             return {"sucesso": False, "motivo": "sem_alvo"}
 
@@ -38,62 +44,41 @@ class GerenciadorCombate:
         if self.jogador.baralho is not None:
             self.jogador.baralho.descartar(carta)
 
+        self._checar_fim()
         return {"sucesso": True, "alvo": alvo}
 
     def terminar_turno_jogador(self):
-        if self.estado != "turno_jogador":
-            return
+        if self.estado == "turno_jogador":
+            self.estado = "turno_inimigos"
 
-        self.estado = "turno_inimigos"
-        self.fila = self.inimigos_vivos()
-
-    def terminar_turno_inimigos(self):
-        self.jogador.start_turno()
-        self.estado = "turno_jogador"
-        self.fila = []
-
+    # todos os vivos atacam e devolve quem agiu (a cena usa isso pras animações).
+    # se o jogador cair no meio, os próximos nem chegam a atacar
     def turno_inimigos(self):
         if self.estado != "turno_inimigos":
-            return
-        for inimigo in self.fila:
+            return []
+
+        agiram = []
+        for inimigo in self.inimigos_vivos():
             inimigo.agir(self.jogador)
+            agiram.append(inimigo)
+            if not self.jogador.is_alive():
+                break
 
-        self.terminar_turno_inimigos()
+        self.estado = "turno_jogador"
+        self._checar_fim()
+        if self.estado != "fim":
+            self.jogador.start_turno()
+        return agiram
 
 
-
-
-
-
-
-
-#teste teste teste
-
+# teste rápido no terminal: python gerenciador_combate.py
 if __name__ == "__main__":
+    from combatente import Player, criar_inimigo
 
-    from PPlay.window import Window
-    janela = Window(1280, 720, "Teste do Gerenciador")
+    jogador = Player()
+    inimigos = [criar_inimigo("goblin"), criar_inimigo("goblin")]
+    g = GerenciadorCombate(jogador, inimigos)
 
-    jogador=Player()
-
-    print("AP antes do gerenciador existir:", jogador.ap)
-
-    inimigo = Inimigo1()
-    inimigo2 = Inimigo1()
-
-    gerenciador = GerenciadorCombate(jogador, [inimigo, inimigo2])
-
-    result = gerenciador.jogar_carta(criar_corte_basico())
-    
-    alvo = gerenciador.alvo()
-    print("AP depois do gerenciador ser criado:", jogador.ap)
-    print("estado:", gerenciador.estado)
-    print("fila_inimigos:", gerenciador.fila)
-    print(result["sucesso"], result.get("alvo"))
-    if result["sucesso"]:
-        print("atingiu:", result["alvo"].nome, "| vida agora:", result["alvo"].vida)
-
-    gerenciador.terminar_turno_jogador()
-
-    print("estado:", gerenciador.estado)
-    print("fila_inimigos:", gerenciador.fila)
+    g.terminar_turno_jogador()
+    print("agiram:", [i.nome for i in g.turno_inimigos()], "| vida do jogador:", jogador.vida)
+    print("estado:", g.estado, "| resultado:", g.resultado())

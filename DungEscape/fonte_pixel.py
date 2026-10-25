@@ -13,11 +13,6 @@
 #   [PALAVRA] -> palavra-chave ciano (Vulneravel, Forca...). sem espaco dentro!
 # ================================================================
 
-#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-# Esse aqui é algo bizarro, pensando em fazer a fonte em pixel e de maneira
-# modificável, pedi pra fazer esse .py doidinho, enfim, se achar uma merda e preferir mudar
-# a gente bota a fonte normal e vê como fazer isso 
-
 CREME = (242, 230, 201)
 DOURADO = (241, 194, 126)
 VERDE = (120, 220, 120)

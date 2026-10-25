@@ -1,6 +1,9 @@
 from animacao_direcional import AnimacaoDirecional
 from utils import asset_path
 
+# Uma entrada por personagem. Todo inimigo precisa ter pelo menos idle, takehit,
+# attack e death (a cena de combate chama essas quatro).
+# Pra criar um novo: copia o bloco do goblin, troca a pasta e o nº de frames.
 ANIMACOES = {
     "goblin": {
         "escala": 6.0,
@@ -63,6 +66,13 @@ class AtorAnimado:
         idle = self.animacoes["idle"]
         return self.chao_y - idle.height * self.escala
 
+    # retângulo (x, y, largura, altura) que o personagem ocupa parado.
+    # a cena usa pra saber se o mouse clicou nele
+    def area_idle(self):
+        idle = self.animacoes["idle"]
+        largura = idle.width * self.escala
+        return (self.x_centro - largura / 2, self.topo_idle(), largura, idle.height * self.escala)
+
     def update(self):
         anim = self.animacoes[self.estado]
         anim.update()
@@ -77,7 +87,7 @@ class AtorAnimado:
         self.animacoes[self.estado].draw()
 
 
-#testando testando testando, isso nao roda se a classe for importada, só quando dá play direto aqui
+# teste visual: python ator.py (não roda quando importado)
 if __name__ == "__main__":
     from PPlay.window import Window
     from PPlay.gameimage import GameImage

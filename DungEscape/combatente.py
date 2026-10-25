@@ -1,42 +1,37 @@
+# Lógica pura de combate: sem pygame, sem imagem. Dá pra testar só no terminal.
+
+
 class Combatente:
-
-#seta os atributos iniciais do combatente
     def __init__(self, nome, vida, vida_max):
-        self.nome=nome
-        self.vida=vida
-        self.vida_max=vida_max
-        self.escudo=0
+        self.nome = nome
+        self.vida = vida
+        self.vida_max = vida_max
+        self.escudo = 0
 
-##calcula o dano ao combatente (consideirando reduçoes de escudo)
+    # o escudo come o dano primeiro, o que sobrar vai na vida
     def recebe_dano(self, qnt):
-        dano_absorvido=min(self.escudo,qnt)
-        dano_real=qnt-dano_absorvido
-        self.escudo-=dano_absorvido
-        self.vida = max(0, self.vida - dano_real)
+        absorvido = min(self.escudo, qnt)
+        self.escudo -= absorvido
+        self.vida = max(0, self.vida - (qnt - absorvido))
 
-##soma escudo ao combatente
     def recebe_escudo(self, qnt):
-        self.escudo+=qnt
+        self.escudo += qnt
 
-##verifica se o combatente está vivo
     def is_alive(self):
-        return self.vida>0
+        return self.vida > 0
 
-##ainda precisamos testar se vamos fzr desse jeito (zerar escudo a cada turno)
+    # ainda não sabemos se o escudo vai zerar todo turno mesmo, por enquanto zera
     def start_turno(self):
-        self.escudo=0
+        self.escudo = 0
 
 
-# ================================================================
-# Tipos de combatente ("subclasses")
-# ================================================================
-
-class Inimigo1(Combatente):
-    def __init__(self, nome="inimigo1", vida=20, dano_ataque=15):
+class Inimigo(Combatente):
+    def __init__(self, nome, vida, dano_ataque, ator_id):
         super().__init__(nome=nome, vida=vida, vida_max=vida)
         self.dano_ataque = dano_ataque
+        self.ator_id = ator_id  # qual entrada de ANIMACOES (ator.py) desenha ele
 
-    # unica acao que o inimigo1 tem, segundo o GDD: atacar
+    # por enquanto todo inimigo só ataca, igual no GDD
     def agir(self, alvo):
         alvo.recebe_dano(self.dano_ataque)
         return {"acao": "ataque"}
@@ -47,21 +42,18 @@ class Player(Combatente):
         super().__init__(nome=nome, vida=vida, vida_max=vida)
         self.ap_max = ap_max
         self.ap = ap_max
-
-        #inclui baralho e tamanho de mao na classe do player
         self.baralho = baralho
         self.tamanho_mao = tamanho_mao
 
-    # tenta gastar AP pra jogar uma carta; devolve False sem gastar nada
-    # se não tiver AP suficiente (mesmo padrão usado no resto do projeto)
+    # False (sem gastar nada) se não tiver AP pra pagar a carta
     def gasta_ap(self, custo):
         if self.ap < custo:
             return False
         self.ap -= custo
         return True
 
-    # no inicio do turno: escudo zera, AP enche e completa a mao ate tamanho_mao
-    # (se ja tiver mais que isso, nao compra nada)
+    # começo do turno: escudo zera, AP enche e a mão completa até tamanho_mao
+    # (se já tiver mais que isso, não compra nada)
     def start_turno(self):
         super().start_turno()
         self.ap = self.ap_max
@@ -69,15 +61,24 @@ class Player(Combatente):
             self.baralho.comprar(self.tamanho_mao - len(self.baralho.mao))
 
 
+# ---------------------------------------------------------------
+# Catálogo de inimigos. Pra criar um novo: põe uma linha aqui e as
+# animações dele em ator.py (com o mesmo nome do ator_id).
+# ---------------------------------------------------------------
+INIMIGOS = {
+    "goblin": dict(nome="Goblin", vida=20, dano_ataque=15, ator_id="goblin"),
+}
 
-#apenas para testes direto no terminal, não faz nada quando importado, apenas quando esse codigo é rodado diretamente
+
+def criar_inimigo(id_inimigo):
+    return Inimigo(**INIMIGOS[id_inimigo])
+
+
+# teste rápido no terminal: python combatente.py
 if __name__ == "__main__":
     jogador = Player()
-    inimigo = Inimigo1()
+    inimigo = criar_inimigo("goblin")
 
     jogador.recebe_escudo(10)
-    retorno = inimigo.agir(jogador)
-    
-    print("retorno:", retorno)
-    print("vida:", jogador.vida, "| escudo:", jogador.escudo)
-    print("tá vivo?", jogador.is_alive())
+    inimigo.agir(jogador)
+    print("vida:", jogador.vida, "| escudo:", jogador.escudo, "| vivo?", jogador.is_alive())
