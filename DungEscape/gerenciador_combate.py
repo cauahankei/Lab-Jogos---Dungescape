@@ -79,14 +79,6 @@ class GerenciadorCombate:
             self.jogador.start_turno()
         return None
 
-    def turno_inimigos(self):
-        agiram = []
-        inimigo = self.proxima_acao_inimiga()
-        while inimigo is not None:
-            agiram.append(inimigo)
-            inimigo = self.proxima_acao_inimiga()
-        return agiram
-
 # teste rapido no terminal: python gerenciador_combate.py
 if __name__ == "__main__":
     from combatente import Player, criar_inimigo
