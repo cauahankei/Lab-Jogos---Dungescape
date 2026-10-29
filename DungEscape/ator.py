@@ -20,6 +20,7 @@ ANIMACOES = {
             "idle":    {"arquivo": ("assets", "Player", "Idle.png"),    "frames": 8, "duracao": 600, "loop": True},
             "attack":  {"arquivo": ("assets", "Player", "Attack1.png"), "frames": 4, "duracao": 400, "loop": False, "depois": "idle"},
             "takehit": {"arquivo": ("assets", "Player", "TakeHit_Silhouette.png"), "frames": 4, "duracao": 400, "loop": False, "depois": "idle"},
+            "death":   {"arquivo": ("assets", "Player", "Death.png"), "frames": 6, "duracao": 500, "loop": False}
         },
     },
 }
@@ -72,6 +73,11 @@ class AtorAnimado:
         idle = self.animacoes["idle"]
         largura = idle.width * self.escala
         return (self.x_centro - largura / 2, self.topo_idle(), largura, idle.height * self.escala)
+
+    def em_acao(self):
+        animacao = self.animacoes[self.estado]
+        tem_loop = self.config[self.estado]["loop"]
+        return (not tem_loop) and animacao.rodando
 
     def update(self):
         anim = self.animacoes[self.estado]
