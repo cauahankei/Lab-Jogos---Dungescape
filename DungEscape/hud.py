@@ -14,22 +14,35 @@ def _hud(arquivo):
     return asset_path("assets", "hud", arquivo)
 
 
+# Ícones dos status que aparecem embaixo da barra (o número é o valor do status).
+# Status novo: põe o PNG em assets/hud e uma linha aqui.
+ICONES_STATUS = {
+    "forca": "status_forca.png",
+    "vulneravel": "status_vulneravel.png",
+}
+
+
 # Barra de vida de qualquer combatente. Com escudo, uma faixa cinza cobre a
 # barra da esquerda pra direita, proporcional à vida máxima.
 class BarraVida:
-    def __init__(self, status, largura=150, altura=14, cor=(90, 190, 90), cor_fundo=(35, 20, 20)):
-        self.status = status
+    def __init__(self, combatente, largura=150, altura=14, cor=(90, 190, 90), cor_fundo=(35, 20, 20)):
+        self.combatente = combatente
         self.barra = ProgressBar(largura, altura, cor_barra=cor, cor_fundo=cor_fundo)
-        self.barra.valor_max = status.vida_max
+        self.barra.valor_max = combatente.vida_max
         self.icone_escudo = GameImage(_hud("escudo_icone.png"))
+        self.icones_status = {nome: GameImage(_hud(arq)) for nome, arq in ICONES_STATUS.items()}
 
     def posicionar(self, centro_x, y):
         self.barra.set_position(centro_x - self.barra.width / 2, y)
 
     def draw(self):
-        barra, status = self.barra, self.status
+        barra, status = self.barra, self.combatente
         barra.set_value(status.vida)
         barra.draw()
+        self._desenhar_escudo(barra, status)
+        self._desenhar_status(barra, status)
+
+    def _desenhar_escudo(self, barra, status):
         if status.escudo <= 0:
             return
 
@@ -47,6 +60,23 @@ class BarraVida:
         w = fonte_pixel.largura(txt, 2)
         fonte_pixel.desenhar(tela, int(icone.x + (icone.width - w) // 2),
                              int(icone.y + icone.height // 2 - 5), txt, (20, 22, 34), esc=2)
+
+
+    # status ativos em fileira, embaixo da barra
+    def _desenhar_status(self, barra, status):
+        tela = Window.get_screen()
+        x, y = barra.x, barra.y + barra.height + 6
+        for nome, icone in self.icones_status.items():
+            valor = status.status.get(nome, 0)
+            if valor <= 0:
+                continue
+            icone.set_position(x, y)
+            icone.draw()
+            txt = str(valor)
+            w = fonte_pixel.largura(txt, 2)
+            fonte_pixel.desenhar(tela, int(x + icone.width - w - 1), int(y + icone.height - 11),
+                                 txt, fonte_pixel.BRANCO, esc=2, sombra=(0, 0, 0))
+            x += icone.width + 6
 
 
 # Orbe de energia com "AP/AP máx" no meio, igual ao do Slay the Spire.
