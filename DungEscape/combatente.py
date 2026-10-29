@@ -38,7 +38,7 @@ class Inimigo(Combatente):
 
 
 class Player(Combatente):
-    def __init__(self, nome="Aprendiz", vida=50, ap_max=3, baralho=None, tamanho_mao=5):
+    def __init__(self, nome="Aprendiz", vida=80, ap_max=3, baralho=None, tamanho_mao=5):
         super().__init__(nome=nome, vida=vida, vida_max=vida)
         self.ap_max = ap_max
         self.ap = ap_max
@@ -66,7 +66,7 @@ class Player(Combatente):
 # animações dele em ator.py (com o mesmo nome do ator_id).
 # ---------------------------------------------------------------
 INIMIGOS = {
-    "goblin": dict(nome="Goblin", vida=20, dano_ataque=15, ator_id="goblin"),
+    "goblin": dict(nome="Goblin", vida=60, dano_ataque=10, ator_id="goblin"),
 }
 
 
