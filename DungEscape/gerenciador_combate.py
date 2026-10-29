@@ -7,7 +7,14 @@ class GerenciadorCombate:
         self.inimigos = inimigos
         self.fila = []
         self.estado = "turno_jogador"   # ou "turno_inimigos" / "fim"
+        self.jogador.limpar_status()    # status de uma luta anterior nao passam pra essa
         self.jogador.start_turno()
+        self.sincronizar_cartas()
+
+    # as cartas mostram o dano real (com Forca), entao atualiza depois de qualquer mudanca
+    def sincronizar_cartas(self):
+        if self.jogador.baralho is not None:
+            self.jogador.baralho.sincronizar(self.jogador)
 
     def inimigos_vivos(self):
         vivos = []
@@ -51,6 +58,7 @@ class GerenciadorCombate:
         if self.jogador.baralho is not None:
             self.jogador.baralho.descartar(carta)
 
+        self.sincronizar_cartas()
         self.checar_fim()
         return {"sucesso": True, "alvo": alvo}
 
@@ -72,11 +80,17 @@ class GerenciadorCombate:
                     self.fila = []          # jogador morreu: os outros nao atacam
                 return inimigo
 
-        # a fila acabou: o turno dos inimigos termina
+        # a fila acabou: fim da rodada, os status com duracao (vulneravel) perdem 1 turno
+        self.jogador.fim_de_rodada()
+        for inimigo in self.inimigos:
+            inimigo.fim_de_rodada()
+
+        # e o turno dos inimigos termina
         self.estado = "turno_jogador"
         self.checar_fim()
         if self.estado != "fim":
             self.jogador.start_turno()
+            self.sincronizar_cartas()
         return None
 
     def turno_inimigos(self):
