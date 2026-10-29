@@ -62,7 +62,7 @@ class CenaCombate(Scene):
         self.pilha_descarte = IconePilha("pilha_descarte.png", largura - 56 - MARGEM, y_pilhas)
         self.botao_passar_turno.set_position(self.pilha_descarte.x - self.botao_passar_turno.width - 16,
                                              altura - self.botao_passar_turno.height - MARGEM)
-        self.orbe = OrbeEnergia(14, y_pilhas - 106)
+        self.orbe = OrbeEnergia(MARGEM + 70, y_pilhas-15)
 
         self.mao = MaoDeCartas(TAMANHO_CARTA,
                                self.pilha_compra.x + self.pilha_compra.largura + 16,
@@ -97,8 +97,19 @@ class CenaCombate(Scene):
         self._cliques()
 
         self.ator_player.update()
+
+        if not self.player.is_alive():
+            if not self._aguardando_reacao and not self.ator_player.em_acao():
+                if self.ator_player.estado != "death":
+                    self.ator_player.tocar("death")
+
         for inimigo in self.inimigos:
             inimigo.ator.update()
+
+        if self.gerenciador.estado == "turno_inimigos" and self._todos_livres():
+            ficha = self.gerenciador.proxima_acao_inimiga()
+            if ficha is not None:
+                self._animar_ataque(ficha)
 
     def _cliques(self):
         mouse = self.mouse
@@ -114,7 +125,7 @@ class CenaCombate(Scene):
         elif self._hover:
             self._jogar_carta(self._hover)
         elif mouse.is_over_object(self.botao_passar_turno):
-            self._passar_turno()
+            self.gerenciador.terminar_turno_jogador()
         else:
             self._escolher_alvo_com_clique()
 
@@ -153,22 +164,27 @@ class CenaCombate(Scene):
     def _reagir(self, inimigo):
         inimigo.ator.tocar("takehit" if inimigo.status.is_alive() else "death")
 
-    def _passar_turno(self):
-        self.gerenciador.terminar_turno_jogador()
-        agiram = self.gerenciador.turno_inimigos()
-
-        for inimigo in self.inimigos:
-            if inimigo.status in agiram:
-                inimigo.ator.tocar("attack")
-
-        # o player só reage um tiquinho depois, quando o golpe chega
-        if agiram and self.player.is_alive():
-            self._aguardando_reacao = True
-            Timer.after(0.25, self._player_apanha)
-
     def _player_apanha(self):
         self.ator_player.tocar("takehit")
         self._aguardando_reacao = False
+
+        #verifica se todos estão "idle" ou se alguem tá agindo
+    def _todos_livres(self):
+        if self._aguardando_reacao:
+            return False
+        if self.ator_player.em_acao():
+            return False
+        for inimigo in self.inimigos:
+            if inimigo.ator.em_acao():
+                return False
+        return True
+
+    def _animar_ataque(self, ficha):
+        for inimigo in self.inimigos:
+            if inimigo.status is ficha:
+                inimigo.ator.tocar("attack")
+        self._aguardando_reacao = True
+        Timer.after(0.25, self._player_apanha)
 
     # ------------------------------------------------------------ desenho
     def draw(self):
@@ -199,7 +215,7 @@ class CenaCombate(Scene):
         self.mao.draw(baralho.mao, self._hover)
 
         resultado = self.gerenciador.resultado()
-        if resultado:
+        if resultado and self._todos_livres():
             centralizado("VITÓRIA" if resultado == "vitoria" else "DERROTA", 200, 8,
                          fonte_pixel.DOURADO if resultado == "vitoria" else fonte_pixel.VERMELHO)
 

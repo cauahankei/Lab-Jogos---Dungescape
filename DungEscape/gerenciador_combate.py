@@ -5,18 +5,25 @@ class GerenciadorCombate:
     def __init__(self, jogador, inimigos):
         self.jogador = jogador
         self.inimigos = inimigos
+        self.fila = []
         self.estado = "turno_jogador"   # ou "turno_inimigos" / "fim"
         self.jogador.start_turno()
 
     def inimigos_vivos(self):
-        return [i for i in self.inimigos if i.is_alive()]
+        vivos = []
+        for inimigo in self.inimigos:
+            if inimigo.is_alive():
+                vivos.append(inimigo)
+        return vivos
 
-    # alvo que vale quando ninguém foi escolhido: o primeiro vivo
+    # alvo que vale quando ninguem foi escolhido: o primeiro vivo
     def alvo_padrao(self):
         vivos = self.inimigos_vivos()
-        return vivos[0] if vivos else None
+        if len(vivos) > 0:
+            return vivos[0]
+        return None
 
-    # "vitoria", "derrota" ou None se a luta ainda tá rolando
+    # "vitoria", "derrota" ou None se a luta ainda ta rolando
     def resultado(self):
         if not self.jogador.is_alive():
             return "derrota"
@@ -24,7 +31,7 @@ class GerenciadorCombate:
             return "vitoria"
         return None
 
-    def _checar_fim(self):
+    def checar_fim(self):
         if self.resultado():
             self.estado = "fim"
 
@@ -44,34 +51,43 @@ class GerenciadorCombate:
         if self.jogador.baralho is not None:
             self.jogador.baralho.descartar(carta)
 
-        self._checar_fim()
+        self.checar_fim()
         return {"sucesso": True, "alvo": alvo}
 
     def terminar_turno_jogador(self):
         if self.estado == "turno_jogador":
             self.estado = "turno_inimigos"
+            self.fila = self.inimigos_vivos()
 
-    # todos os vivos atacam e devolve quem agiu (a cena usa isso pras animações).
-    # se o jogador cair no meio, os próximos nem chegam a atacar
-    def turno_inimigos(self):
+
+    def proxima_acao_inimiga(self):
         if self.estado != "turno_inimigos":
-            return []
+            return None
 
-        agiram = []
-        for inimigo in self.inimigos_vivos():
-            inimigo.agir(self.jogador)
-            agiram.append(inimigo)
-            if not self.jogador.is_alive():
-                break
+        while len(self.fila) > 0:
+            inimigo = self.fila.pop(0)      # tira o primeiro da fila
+            if inimigo.is_alive():
+                inimigo.agir(self.jogador)
+                if not self.jogador.is_alive():
+                    self.fila = []          # jogador morreu: os outros nao atacam
+                return inimigo
 
+        # a fila acabou: o turno dos inimigos termina
         self.estado = "turno_jogador"
-        self._checar_fim()
+        self.checar_fim()
         if self.estado != "fim":
             self.jogador.start_turno()
+        return None
+
+    def turno_inimigos(self):
+        agiram = []
+        inimigo = self.proxima_acao_inimiga()
+        while inimigo is not None:
+            agiram.append(inimigo)
+            inimigo = self.proxima_acao_inimiga()
         return agiram
 
-
-# teste rápido no terminal: python gerenciador_combate.py
+# teste rapido no terminal: python gerenciador_combate.py
 if __name__ == "__main__":
     from combatente import Player, criar_inimigo
 
