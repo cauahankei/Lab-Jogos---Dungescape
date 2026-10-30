@@ -20,6 +20,44 @@ SOMBRA = (30, 22, 32)       # sombrinha atrás do nome
 TAMANHO_CARTA = (68, 109)    # tamanho dos PNGs
 
 
+# ---------------------------------------------------------------
+# Efeitos que uma carta pode ter. Cada um só roda se a carta tem o campo
+# com valor > 0, então uma carta nova é só juntar os campos que quiser.
+# A ordem importa: dano vem antes dos status (senão o Golpe Baixo já
+# bateria com o vulnerável aplicado).
+# Nenhum deles sabe da cena: só mexem em quem usou e em quem é o alvo.
+# ---------------------------------------------------------------
+def _efeito_dano(carta, usuario, alvo):
+    alvo.recebe_dano(usuario.dano_causado(carta.base["dano"]))
+
+
+def _efeito_escudo(carta, usuario, alvo):
+    usuario.recebe_escudo(carta.base["escudo"])
+
+
+def _efeito_compra(carta, usuario, alvo):
+    baralho = getattr(usuario, "baralho", None)   # inimigo não tem baralho
+    if baralho is not None:
+        baralho.comprar(carta.base["compra"])
+
+
+def _efeito_forca(carta, usuario, alvo):
+    usuario.aplicar_status("forca", carta.base["forca"])
+
+
+def _efeito_vulneravel(carta, usuario, alvo):
+    alvo.aplicar_status("vulneravel", carta.base["vulneravel"])
+
+
+EFEITOS = {
+    "dano": _efeito_dano,
+    "escudo": _efeito_escudo,
+    "compra": _efeito_compra,
+    "forca": _efeito_forca,
+    "vulneravel": _efeito_vulneravel,
+}
+
+
 # O PNG é só a arte (moldura, ícone, placa e caixa vazias). Nome, custo e
 # descrição são escritos por código em cima, então buff/debuff = mudar o valor
 # e chamar atualizar_texto().
@@ -97,12 +135,19 @@ class Carta(Sprite):
 
         self.image = img
 
-    # dano vai pro alvo, escudo vai pra quem jogou
+    # roda todos os efeitos da carta (ver EFEITOS lá em cima)
     def usar(self, usuario, alvo=None):
-        if self.dano > 0:
-            alvo.recebe_dano(self.dano)
-        if self.escudo > 0:
-            usuario.recebe_escudo(self.escudo)
+        for campo, efeito in EFEITOS.items():
+            if self.base.get(campo, 0) > 0:
+                efeito(self, usuario, alvo)
+
+    # deixa o dano mostrado na carta igual ao que ela vai causar de verdade
+    # (com a Força de quem joga). só redesenha se o número mudou
+    def sincronizar(self, usuario):
+        novo = usuario.dano_causado(self.base["dano"]) if self.base["dano"] > 0 else 0
+        if novo != self.dano:
+            self.dano = novo
+            self.atualizar_texto()
 
 
 # As três pilhas do jogador: compra, mão e descarte.
@@ -132,35 +177,35 @@ class Baralho:
             self.mao.remove(carta)
             self.descarte.append(carta)
 
+    def todas(self):
+        return self.compra + self.mao + self.descarte
+
+    # atualiza o dano de todas as cartas (mão e pilhas) pro jogador atual
+    def sincronizar(self, usuario):
+        for carta in self.todas():
+            carta.sincronizar(usuario)
+
 
 # ---------------------------------------------------------------
-# Catálogo das cartas do GDD. Os valores são de teste (o GDD só diz "X").
+# Catálogo de cartas. Os valores são de teste (o GDD só diz "X").
 # Na descrição, {dano}/{escudo}/extras viram o número na hora, "\n" quebra
 # linha e [palavra] fica ciano.
-# As marcadas com TODO ainda só fazem dano/escudo, o efeito especial vem depois.
+# Campos com efeito: dano, escudo, compra, forca, vulneravel (ver EFEITOS).
+# Faltam entrar: Corte Rápido, Corte Duplo, Contra Ataque, Bater e Defender e
+# Golpe Pesado (a arte deles já tá em assets/Cartas).
 # ---------------------------------------------------------------
 CARTAS = {
     "ataque": dict(arquivo="carta_ataque.png", nome="Ataque", custo=1, dano=6,
                    descricao="Causa {dano}\nde dano."),
     "defesa": dict(arquivo="carta_defesa.png", nome="Defesa", custo=1, escudo=5,
                    descricao="Ganha {escudo}\nde escudo."),
-    "foco": dict(arquivo="carta_foco.png", nome="Foco", custo=1, compra=2,                   # TODO: comprar
+    "foco": dict(arquivo="carta_foco.png", nome="Foco", custo=1, compra=2,
                  descricao="Compra {compra}\ncartas do\nbaralho."),
-    "corte_rapido": dict(arquivo="carta_corte_rapido.png", nome="Corte Rápido", custo=0, dano=3,
-                         descricao="Causa {dano}\nde dano.\nCusto zero."),
-    "corte_duplo": dict(arquivo="carta_corte_duplo.png", nome="Corte Duplo", custo=1, dano=4,   # TODO: bater 2x
-                        descricao="Dano {dano}\nduas vezes."),
-    "contra_ataque": dict(arquivo="carta_contra_ataque.png", nome="Contra Ataque", custo=1,   # TODO: Retaliação
-                          retaliacao=4, descricao="Ao ser atacado, devolve {retaliacao} de dano."),
-    "fortalecer": dict(arquivo="carta_fortalecer.png", nome="Fortalecer", custo=1, forca=2,   # TODO: Força
+    "fortalecer": dict(arquivo="carta_fortalecer.png", nome="Fortalecer", custo=1, forca=2,
                        descricao="Ganha {forca}\nde [força].\nAtaques\ncausam +{forca}."),
-    "golpe_baixo": dict(arquivo="carta_golpe_baixo.png", nome="Golpe Baixo", custo=1, dano=6,  # TODO: Vulnerável
-                        descricao="Causa {dano}\nde dano e\naplica\n[vulnerável]."),
-    "bater_defender": dict(arquivo="carta_bater_defender.png", nome="Bater e Defender", custo=2,
-                           dano=5, escudo=5,
-                           descricao="Causa {dano}\nde dano e\nganha {escudo}\nde escudo."),
-    "golpe_pesado": dict(arquivo="carta_golpe_pesado.png", nome="Golpe Pesado", custo=2, dano=14,  # TODO: Vulnerável
-                         descricao="Causa {dano}\nde dano.\nVocê fica\n[vulnerável]."),
+    "golpe_baixo": dict(arquivo="carta_golpe_baixo.png", nome="Golpe Baixo", custo=1, dano=6,
+                        vulneravel=2,
+                        descricao="Causa {dano}\nde dano e\naplica {vulneravel}\n[vulnerável]."),
 }
 
 
@@ -171,4 +216,5 @@ def criar_carta(id_carta):
 
 
 def deck_inicial():
-    return [criar_carta("ataque") for _ in range(5)] + [criar_carta("defesa") for _ in range(4)]
+    receita = {"ataque": 4, "defesa": 3, "foco": 1, "fortalecer": 1, "golpe_baixo": 1}
+    return [criar_carta(id_carta) for id_carta, qnt in receita.items() for _ in range(qnt)]

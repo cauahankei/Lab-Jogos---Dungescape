@@ -1,5 +1,8 @@
 # Lógica pura de combate: sem pygame, sem imagem. Dá pra testar só no terminal.
 
+MULT_VULNERAVEL = 1.5                # GDD: vulnerável aumenta o dano recebido em 50%
+STATUS_COM_DURACAO = ("vulneravel",)  # esses perdem 1 por rodada; os outros ficam até o fim da luta
+
 
 class Combatente:
     def __init__(self, nome, vida, vida_max):
@@ -7,9 +10,38 @@ class Combatente:
         self.vida = vida
         self.vida_max = vida_max
         self.escudo = 0
+        self.status = {}   # nome -> valor. forca = bônus de dano; vulneravel = turnos que faltam
 
-    # o escudo come o dano primeiro, o que sobrar vai na vida
+    # ---------- status ----------
+    # aplicar de novo soma (2 de força + 2 de força = 4)
+    def aplicar_status(self, nome, valor):
+        self.status[nome] = self.status.get(nome, 0) + valor
+
+    def tem_status(self, nome):
+        return self.status.get(nome, 0) > 0
+
+    def limpar_status(self):
+        self.status = {}
+        self.escudo = 0
+
+    # chamado uma vez por rodada, depois que os inimigos agiram
+    def fim_de_rodada(self):
+        for nome in STATUS_COM_DURACAO:
+            if self.tem_status(nome):
+                self.status[nome] -= 1
+                if self.status[nome] <= 0:
+                    del self.status[nome]
+
+    # ---------- dano ----------
+    # dano que ESSE combatente causa (a força soma no dano base)
+    def dano_causado(self, base):
+        return max(0, base + self.status.get("forca", 0))
+
+    # vulnerável aumenta o dano recebido (arredonda pra baixo), depois o escudo
+    # come o que puder e o resto vai na vida
     def recebe_dano(self, qnt):
+        if self.tem_status("vulneravel"):
+            qnt = int(qnt * MULT_VULNERAVEL)
         absorvido = min(self.escudo, qnt)
         self.escudo -= absorvido
         self.vida = max(0, self.vida - (qnt - absorvido))
@@ -33,7 +65,7 @@ class Inimigo(Combatente):
 
     # por enquanto todo inimigo só ataca, igual no GDD
     def agir(self, alvo):
-        alvo.recebe_dano(self.dano_ataque)
+        alvo.recebe_dano(self.dano_causado(self.dano_ataque))
         return {"acao": "ataque"}
 
 
@@ -82,3 +114,8 @@ if __name__ == "__main__":
     jogador.recebe_escudo(10)
     inimigo.agir(jogador)
     print("vida:", jogador.vida, "| escudo:", jogador.escudo, "| vivo?", jogador.is_alive())
+
+    inimigo.aplicar_status("vulneravel", 2)
+    antes = inimigo.vida
+    inimigo.recebe_dano(10)
+    print("goblin vulnerável levou 10 ->", antes - inimigo.vida, "de dano")
