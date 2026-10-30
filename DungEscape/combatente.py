@@ -122,6 +122,13 @@ INIMIGOS = {
                        {"tipo": "ataque", "dano": 10, "peso": 70},
                        {"tipo": "escudo", "escudo": 8, "peso": 30},
                    ]),
+
+    "slime": dict(nome="Slime", vida=60, ator_id="slime",
+                   acoes=[
+                       {"tipo": "ataque", "dano": 8, "peso": 20},
+                       {"tipo": "escudo", "escudo": 15, "peso": 80},
+                   ]),
+                   
 }
 
 

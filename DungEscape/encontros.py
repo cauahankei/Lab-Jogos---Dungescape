@@ -4,9 +4,10 @@ import random
 # obs: o max de inimigos em 1 combate é 3, não colocar mais que isso se não dá merda
 ENCONTROS = {
     "normal": [
-        ["goblin"],
-        ["goblin", "goblin"],
+        ["slime"],
+        ["goblin", "slime"],
         ["goblin", "goblin", "goblin"],
+
     ],
     "elite": [],
     "boss": [],

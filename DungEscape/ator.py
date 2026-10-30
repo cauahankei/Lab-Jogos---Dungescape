@@ -23,6 +23,15 @@ ANIMACOES = {
             "death":   {"arquivo": ("assets", "Player", "Death.png"), "frames": 6, "duracao": 500, "loop": False}
         },
     },
+    "slime": {
+        "escala": 6.0,
+        "animacoes": {
+            "idle":    {"arquivo": ("assets", "Slime", "Idle.png"),    "frames": 14, "duracao": 1000, "loop": True},
+            "takehit": {"arquivo": ("assets", "Slime", "TakeHit.png"), "frames": 3, "duracao": 300, "loop": False, "depois": "idle"},
+            "death":   {"arquivo": ("assets", "Slime", "Death.png"),   "frames": 11, "duracao": 500, "loop": False},
+            "attack":  {"arquivo": ("assets", "Slime", "Attack.png"), "frames": 19, "duracao": 600, "loop": False, "depois": "idle"}
+        },
+    },
 }
 
 class AtorAnimado:
