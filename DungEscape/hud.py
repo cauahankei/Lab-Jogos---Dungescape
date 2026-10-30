@@ -21,6 +21,12 @@ ICONES_STATUS = {
     "vulneravel": "status_vulneravel.png",
 }
 
+ICONES_INTENCAO = {
+    "ataque": "simbolo_ataque.png",
+    "escudo": "simbolo_escudo.png",
+    "debuff": "simbolo_debuff.png",
+    "buff": "simbolo_buff.png",
+}
 
 # Barra de vida de qualquer combatente. Com escudo, uma faixa cinza cobre a
 # barra da esquerda pra direita, proporcional à vida máxima.
@@ -298,6 +304,34 @@ class VisualizadorPilha:
             centralizado("NENHUMA CARTA", h // 2, 3, fonte_pixel.CREME)
 
         self.voltar.draw()
+
+# Mostra o que o inimigo vai fazer no próximo turno: ícone + número
+class IconeIntencao:
+    def __init__(self, inimigo):
+        self.inimigo = inimigo
+        self.icones = {}
+        for tipo, arquivo in ICONES_INTENCAO.items():
+            self.icones[tipo] = GameImage(_hud(arquivo))
+
+    # y_baixo é onde a base do ícone fica
+    def draw(self, centro_x, y_baixo):
+        acao = self.inimigo.proxima_acao
+        icone = self.icones[acao["tipo"]]
+
+        valor = acao["valor"]
+        if acao["tipo"] == "ataque":
+            valor = self.inimigo.dano_causado(valor)   # inclui a Força dele
+
+        txt = str(valor)
+        w = fonte_pixel.largura(txt, 2)
+        x = centro_x - (icone.width + 4 + w) / 2
+        y = y_baixo - icone.height
+
+        icone.set_position(x, y)
+        icone.draw()
+        fonte_pixel.desenhar(Window.get_screen(), int(x + icone.width + 4),
+                             int(y + icone.height / 2 - 5), txt,
+                             fonte_pixel.BRANCO, esc=2, sombra=(0, 0, 0))
 
 
 # Texto pixelado centralizado na tela (títulos, avisos...)

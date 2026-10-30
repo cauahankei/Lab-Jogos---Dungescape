@@ -69,14 +69,22 @@ class Inimigo(Combatente):
         pesos = []
         for acao in self.acoes:
             pesos.append(acao["peso"])
-        self.proxima_acao = random.choices(self.acoes, weights=pesos)[0]
+        escolhida = random.choices(self.acoes, weights=pesos)[0]
+        self.proxima_acao = {"tipo": escolhida["tipo"],
+                            "valor": self._valor_da_acao(escolhida)}
+
+    def _valor_da_acao(self, acao):
+        if acao["tipo"] == "ataque":
+            return acao["dano"]
+        return acao["escudo"]
+
 
     def agir(self, alvo):
         acao = self.proxima_acao
         if acao["tipo"] == "ataque":
-            alvo.recebe_dano(self.dano_causado(acao["dano"]))
+            alvo.recebe_dano(self.dano_causado(acao["valor"]))
         elif acao["tipo"] == "escudo":
-            self.recebe_escudo(acao["escudo"])
+            self.recebe_escudo(acao["valor"])
         self.sortear_acao()      # decide já a ação do próximo turno
         return acao
 

@@ -9,7 +9,7 @@ from combatente import Player, criar_inimigo
 from gerenciador_combate import GerenciadorCombate
 from ator import AtorAnimado
 from hud import (BarraVida, OrbeEnergia, IconePilha, MaoDeCartas,
-                 VisualizadorPilha, centralizado, desenhar_seta_alvo)
+                 VisualizadorPilha, centralizado, desenhar_seta_alvo, IconeIntencao)
 import fonte_pixel
 
 MARGEM = 24
@@ -24,6 +24,7 @@ class InimigoEmCena:
         self.barra = BarraVida(status, 120, 12, cor=(190, 60, 60), cor_fundo=(30, 15, 15))
         # a barra fica fixa (baseada no idle), senão ela pularia a cada animação
         self.barra.posicionar(centro_x, self.ator.topo_idle() - 24)
+        self.intencao = IconeIntencao(status)
 
     def contem(self, x, y):
         ax, ay, aw, ah = self.ator.area_idle()
@@ -207,11 +208,13 @@ class CenaCombate(Scene):
             inimigo.ator.draw()
             if inimigo.status.is_alive():
                 inimigo.barra.draw()
+                if self.gerenciador.estado == "turno_jogador":
+                    inimigo.intencao.draw(inimigo.ator.x_centro, inimigo.barra.barra.y - 6)
 
         # só mostra a seta quando tem mais de um inimigo pra escolher
         vivos = [i for i in self.inimigos if i.status.is_alive()]
         if len(vivos) > 1 and self.alvo in vivos:
-            desenhar_seta_alvo(self.alvo.ator.x_centro, self.alvo.barra.barra.y - 34)
+            desenhar_seta_alvo(self.alvo.ator.x_centro, self.alvo.barra.barra.y - 50)
 
         self.mao.draw(baralho.mao, self._hover)
 
