@@ -1,4 +1,4 @@
-# Lógica pura de combate: sem pygame, sem imagem. Dá pra testar só no terminal.
+import random
 
 MULT_VULNERAVEL = 1.5                # GDD: vulnerável aumenta o dano recebido em 50%
 STATUS_COM_DURACAO = ("vulneravel",)  # esses perdem 1 por rodada; os outros ficam até o fim da luta
@@ -58,16 +58,27 @@ class Combatente:
 
 
 class Inimigo(Combatente):
-    def __init__(self, nome, vida, dano_ataque, ator_id):
+    def __init__(self, nome, vida, acoes, ator_id):
         super().__init__(nome=nome, vida=vida, vida_max=vida)
-        self.dano_ataque = dano_ataque
-        self.ator_id = ator_id  # qual entrada de ANIMACOES (ator.py) desenha ele
+        self.acoes = acoes
+        self.ator_id = ator_id
+        self.proxima_acao = None
+        self.sortear_acao()      # já nasce sabendo o que vai fazer no 1º turno
 
-    # por enquanto todo inimigo só ataca, igual no GDD
+    def sortear_acao(self):
+        pesos = []
+        for acao in self.acoes:
+            pesos.append(acao["peso"])
+        self.proxima_acao = random.choices(self.acoes, weights=pesos)[0]
+
     def agir(self, alvo):
-        alvo.recebe_dano(self.dano_causado(self.dano_ataque))
-        return {"acao": "ataque"}
-
+        acao = self.proxima_acao
+        if acao["tipo"] == "ataque":
+            alvo.recebe_dano(self.dano_causado(acao["dano"]))
+        elif acao["tipo"] == "escudo":
+            self.recebe_escudo(acao["escudo"])
+        self.sortear_acao()      # decide já a ação do próximo turno
+        return acao
 
 class Player(Combatente):
     def __init__(self, nome="Aprendiz", vida=80, ap_max=3, baralho=None, tamanho_mao=5):
@@ -98,7 +109,11 @@ class Player(Combatente):
 # animações dele em ator.py (com o mesmo nome do ator_id).
 # ---------------------------------------------------------------
 INIMIGOS = {
-    "goblin": dict(nome="Goblin", vida=60, dano_ataque=10, ator_id="goblin"),
+    "goblin": dict(nome="Goblin", vida=60, ator_id="goblin",
+                   acoes=[
+                       {"tipo": "ataque", "dano": 10, "peso": 70},
+                       {"tipo": "escudo", "escudo": 8, "peso": 30},
+                   ]),
 }
 
 

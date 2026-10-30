@@ -107,10 +107,9 @@ class CenaCombate(Scene):
             inimigo.ator.update()
 
         if self.gerenciador.estado == "turno_inimigos" and self._todos_livres():
-            ficha = self.gerenciador.proxima_acao_inimiga()
-            if ficha is not None:
-                self._animar_ataque(ficha)
-
+            evento = self.gerenciador.proxima_acao_inimiga()
+            if evento is not None:
+                self._animar_acao(evento)
     def _cliques(self):
         mouse = self.mouse
         if not mouse.button_down(mouse.LEFT):
@@ -179,13 +178,15 @@ class CenaCombate(Scene):
                 return False
         return True
 
-    def _animar_ataque(self, ficha):
+    def _animar_acao(self, evento):
+        if evento["acao"]["tipo"] != "ataque":
+            return          # escudo: nada toca, o goblin continua no idle
+
         for inimigo in self.inimigos:
-            if inimigo.status is ficha:
+            if inimigo.status is evento["inimigo"]:
                 inimigo.ator.tocar("attack")
         self._aguardando_reacao = True
         Timer.after(0.25, self._player_apanha)
-
     # ------------------------------------------------------------ desenho
     def draw(self):
         if self.visualizador.aberta:

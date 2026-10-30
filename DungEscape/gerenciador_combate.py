@@ -66,6 +66,8 @@ class GerenciadorCombate:
         if self.estado == "turno_jogador":
             self.estado = "turno_inimigos"
             self.fila = self.inimigos_vivos()
+            for inimigo in self.inimigos:
+                inimigo.escudo = 0
 
 
     def proxima_acao_inimiga(self):
@@ -75,10 +77,10 @@ class GerenciadorCombate:
         while len(self.fila) > 0:
             inimigo = self.fila.pop(0)      # tira o primeiro da fila
             if inimigo.is_alive():
-                inimigo.agir(self.jogador)
+                acao = inimigo.agir(self.jogador)
                 if not self.jogador.is_alive():
                     self.fila = []          # jogador morreu: os outros nao atacam
-                return inimigo
+                return {"inimigo": inimigo, "acao": acao}
 
         # a fila acabou: fim da rodada, os status com duracao (vulneravel) perdem 1 turno
         self.jogador.fim_de_rodada()
