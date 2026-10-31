@@ -19,6 +19,7 @@ def _hud(arquivo):
 ICONES_STATUS = {
     "forca": "status_forca.png",
     "vulneravel": "status_vulneravel.png",
+    "fraqueza": "status_fraqueza.png",
 }
 
 ICONES_INTENCAO = {
@@ -314,13 +315,13 @@ class IconeIntencao:
             self.icones[tipo] = GameImage(_hud(arquivo))
 
     # y_baixo é onde a base do ícone fica
-    def draw(self, centro_x, y_baixo):
+    def draw(self, centro_x, y_baixo, alvo):
         acao = self.inimigo.proxima_acao
         icone = self.icones[acao["tipo"]]
 
         valor = acao["valor"]
         if acao["tipo"] == "ataque":
-            valor = self.inimigo.dano_causado(valor)   # inclui a Força dele
+            valor = alvo.dano_recebido(self.inimigo.dano_causado(valor))   # inclui a Força dele e mod. por vulneravel tbm
 
         txt = str(valor)
         w = fonte_pixel.largura(txt, 2)

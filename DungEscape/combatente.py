@@ -1,7 +1,8 @@
 import random
 
 MULT_VULNERAVEL = 1.5                # GDD: vulnerável aumenta o dano recebido em 50%
-STATUS_COM_DURACAO = ("vulneravel",)  # esses perdem 1 por rodada; os outros ficam até o fim da luta
+MULT_FRAQUEZA = 0.75
+STATUS_COM_DURACAO = ("vulneravel","fraqueza")  # esses perdem 1 por rodada; os outros ficam até o fim da luta
 
 
 class Combatente:
@@ -35,13 +36,22 @@ class Combatente:
     # ---------- dano ----------
     # dano que ESSE combatente causa (a força soma no dano base)
     def dano_causado(self, base):
-        return max(0, base + self.status.get("forca", 0))
+        dano = base + self.status.get("forca", 0)
+        if self.tem_status("fraqueza"):
+            dano = int(dano * MULT_FRAQUEZA)
+        return max(0, dano)
 
+    #existe para calcular o dano aumentado pela vulnerabilidade para poder mostrar o dano certo na intenção do inimigo
+    #é uma camada a mais "inutil" mas existe separada para ser simples do hud pegar o dano já modificado
+    def dano_recebido(self, qnt):
+        if self.tem_status("vulneravel"):
+            qnt = int(qnt * MULT_VULNERAVEL)
+        return qnt
+    
     # vulnerável aumenta o dano recebido (arredonda pra baixo), depois o escudo
     # come o que puder e o resto vai na vida
     def recebe_dano(self, qnt):
-        if self.tem_status("vulneravel"):
-            qnt = int(qnt * MULT_VULNERAVEL)
+        qnt = self.dano_recebido(qnt)
         absorvido = min(self.escudo, qnt)
         self.escudo -= absorvido
         self.vida = max(0, self.vida - (qnt - absorvido))

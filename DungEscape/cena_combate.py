@@ -75,6 +75,8 @@ class CenaCombate(Scene):
         self._aguardando_reacao = False   # espera o player apanhar antes de liberar o input
         self.mao.organizar(self.player.baralho.mao)
 
+
+
     # até 3 inimigos, o último sempre no mesmo canto da tela
     def _posicoes_inimigos(self, n):
         ultimo = self.janela.width * 0.8
@@ -209,7 +211,7 @@ class CenaCombate(Scene):
             if inimigo.status.is_alive():
                 inimigo.barra.draw()
                 if self.gerenciador.estado == "turno_jogador":
-                    inimigo.intencao.draw(inimigo.ator.x_centro, inimigo.barra.barra.y - 6)
+                    inimigo.intencao.draw(inimigo.ator.x_centro, inimigo.barra.barra.y - 6, self.player)
 
         # só mostra a seta quando tem mais de um inimigo pra escolher
         vivos = [i for i in self.inimigos if i.status.is_alive()]
