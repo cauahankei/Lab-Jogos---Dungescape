@@ -66,6 +66,8 @@ class GerenciadorCombate:
         if self.estado == "turno_jogador":
             self.estado = "turno_inimigos"
             self.fila = self.inimigos_vivos()
+            self.jogador.fim_de_turno()
+            self.sincronizar_cartas()
             for inimigo in self.inimigos:
                 inimigo.escudo = 0
 
@@ -78,16 +80,12 @@ class GerenciadorCombate:
             inimigo = self.fila.pop(0)      # tira o primeiro da fila
             if inimigo.is_alive():
                 acao = inimigo.agir(self.jogador)
+                inimigo.fim_de_turno()
                 if not self.jogador.is_alive():
-                    self.fila = []          # jogador morreu: os outros nao atacam
+                    self.fila = []
                 return {"inimigo": inimigo, "acao": acao}
 
-        # a fila acabou: fim da rodada, os status com duracao (vulneravel) perdem 1 turno
-        self.jogador.fim_de_rodada()
-        for inimigo in self.inimigos:
-            inimigo.fim_de_rodada()
 
-        # e o turno dos inimigos termina
         self.estado = "turno_jogador"
         self.checar_fim()
         if self.estado != "fim":

@@ -26,7 +26,7 @@ class Combatente:
         self.escudo = 0
 
     # chamado uma vez por rodada, depois que os inimigos agiram
-    def fim_de_rodada(self):
+    def fim_de_turno(self):
         for nome in STATUS_COM_DURACAO:
             if self.tem_status(nome):
                 self.status[nome] -= 1
@@ -51,7 +51,8 @@ class Combatente:
     # vulnerável aumenta o dano recebido (arredonda pra baixo), depois o escudo
     # come o que puder e o resto vai na vida
     def recebe_dano(self, qnt):
-        qnt = self.dano_recebido(qnt)
+        if self.tem_status("vulneravel"):
+            qnt = int(qnt * MULT_VULNERAVEL)
         absorvido = min(self.escudo, qnt)
         self.escudo -= absorvido
         self.vida = max(0, self.vida - (qnt - absorvido))
@@ -81,12 +82,15 @@ class Inimigo(Combatente):
             pesos.append(acao["peso"])
         escolhida = random.choices(self.acoes, weights=pesos)[0]
         self.proxima_acao = {"tipo": escolhida["tipo"],
-                            "valor": self._valor_da_acao(escolhida)}
+                            "valor": self._valor_da_acao(escolhida),
+                            "status": escolhida.get("status")}
 
     def _valor_da_acao(self, acao):
         if acao["tipo"] == "ataque":
             return acao["dano"]
-        return acao["escudo"]
+        if acao["tipo"] == "escudo":
+            return acao["escudo"]
+        return acao["valor"]          # buff e debuff
 
 
     def agir(self, alvo):
@@ -95,7 +99,11 @@ class Inimigo(Combatente):
             alvo.recebe_dano(self.dano_causado(acao["valor"]))
         elif acao["tipo"] == "escudo":
             self.recebe_escudo(acao["valor"])
-        self.sortear_acao()      # decide já a ação do próximo turno
+        elif acao["tipo"] == "debuff":
+            alvo.aplicar_status(acao["status"], acao["valor"])
+        elif acao["tipo"] == "buff":
+            self.aplicar_status(acao["status"], acao["valor"])
+        self.sortear_acao()
         return acao
 
 class Player(Combatente):
@@ -135,8 +143,9 @@ INIMIGOS = {
 
     "slime": dict(nome="Slime", vida=60, ator_id="slime",
                    acoes=[
-                       {"tipo": "ataque", "dano": 8, "peso": 20},
-                       {"tipo": "escudo", "escudo": 15, "peso": 80},
+                        {"tipo": "debuff", "status": "fraqueza", "valor": 2, "peso": 40},
+                        {"tipo": "ataque", "dano": 6, "peso": 30},
+                        {"tipo": "escudo", "escudo": 10, "peso": 30},
                    ]),
                    
 }
