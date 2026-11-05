@@ -28,7 +28,13 @@ TAMANHO_CARTA = (68, 109)    # tamanho dos PNGs
 # Nenhum deles sabe da cena: só mexem em quem usou e em quem é o alvo.
 # ---------------------------------------------------------------
 def _efeito_dano(carta, usuario, alvo):
-    alvo.recebe_dano(usuario.dano_causado(carta.base["dano"]))
+    # "vezes" > 1 bate de novo (Corte Duplo). cada golpe conta a Força, o Vulnerável,
+    # o escudo e a Retaliação do alvo separadamente. parou de valer se alguém caiu
+    for _ in range(carta.base.get("vezes", 1)):
+        if not alvo.is_alive() or not usuario.is_alive():
+            break
+        alvo.recebe_dano(usuario.dano_causado(carta.base["dano"]))
+        alvo.retaliar(usuario)
 
 
 def _efeito_escudo(carta, usuario, alvo):
@@ -45,8 +51,18 @@ def _efeito_forca(carta, usuario, alvo):
     usuario.aplicar_status("forca", carta.base["forca"])
 
 
+def _efeito_retaliacao(carta, usuario, alvo):
+    usuario.aplicar_status("retaliacao", carta.base["retaliacao"])
+
+
 def _efeito_vulneravel(carta, usuario, alvo):
     alvo.aplicar_status("vulneravel", carta.base["vulneravel"])
+
+
+# o status conta no fim do turno de cada um, então 2 = fica vulnerável durante o
+# turno dos inimigos que vem logo em seguida (o Golpe Pesado usa isso)
+def _efeito_vulneravel_proprio(carta, usuario, alvo):
+    usuario.aplicar_status("vulneravel", carta.base["vulneravel_proprio"])
 
 
 EFEITOS = {
@@ -54,7 +70,9 @@ EFEITOS = {
     "escudo": _efeito_escudo,
     "compra": _efeito_compra,
     "forca": _efeito_forca,
+    "retaliacao": _efeito_retaliacao,
     "vulneravel": _efeito_vulneravel,
+    "vulneravel_proprio": _efeito_vulneravel_proprio,
 }
 
 
@@ -199,9 +217,8 @@ class Baralho:
 # Catálogo de cartas. Os valores são de teste (o GDD só diz "X").
 # Na descrição, {dano}/{escudo}/extras viram o número na hora, "\n" quebra
 # linha e [palavra] fica ciano.
-# Campos com efeito: dano, escudo, compra, forca, vulneravel (ver EFEITOS).
-# Faltam entrar: Corte Rápido, Corte Duplo, Contra Ataque, Bater e Defender e
-# Golpe Pesado (a arte deles já tá em assets/Cartas).
+# Campos com efeito: dano, escudo, compra, forca, retaliacao, vulneravel e
+# vulneravel_proprio (ver EFEITOS). "vezes" faz o dano repetir.
 # ---------------------------------------------------------------
 CARTAS = {
     "ataque": dict(arquivo="carta_ataque.png", nome="Ataque", custo=1, dano=6,
@@ -215,6 +232,19 @@ CARTAS = {
     "golpe_baixo": dict(arquivo="carta_golpe_baixo.png", nome="Golpe Baixo", custo=1, dano=6,
                         vulneravel=2,
                         descricao="Causa {dano}\nde dano e\naplica {vulneravel}\n[vulnerável]."),
+    "corte_rapido": dict(arquivo="carta_corte_rapido.png", nome="Corte Rápido", custo=0, dano=3,
+                         descricao="Causa {dano}\nde dano.\nCusto zero."),
+    "corte_duplo": dict(arquivo="carta_corte_duplo.png", nome="Corte Duplo", custo=1, dano=4,
+                        vezes=2, descricao="Dano {dano}\nduas vezes."),
+    "contra_ataque": dict(arquivo="carta_contra_ataque.png", nome="Contra Ataque", custo=1,
+                          retaliacao=4,
+                          descricao="Ao ser atacado, devolve {retaliacao} de dano."),
+    "bater_defender": dict(arquivo="carta_bater_defender.png", nome="Bater e Defender", custo=2,
+                           dano=5, escudo=5,
+                           descricao="Causa {dano}\nde dano e\nganha {escudo}\nde escudo."),
+    "golpe_pesado": dict(arquivo="carta_golpe_pesado.png", nome="Golpe Pesado", custo=2, dano=14,
+                         vulneravel_proprio=2,
+                         descricao="Causa {dano}\nde dano.\nVocê fica\n[vulnerável]."),
 }
 
 
@@ -225,7 +255,9 @@ def criar_carta(id_carta):
 
 
 def deck_inicial():
-    receita = {"ataque": 4, "defesa": 3, "foco": 1, "fortalecer": 1, "golpe_baixo": 1}
+    receita = {"ataque": 4, "defesa": 3, "foco": 1, "fortalecer": 1, "golpe_baixo": 1,
+               "corte_rapido": 1, "corte_duplo": 1, "contra_ataque": 1,
+               "bater_defender": 1, "golpe_pesado": 1}
     return [criar_carta(id_carta) for id_carta, qnt in receita.items() for _ in range(qnt)]
 
 # Cada pool é uma lista de ids do catálogo CARTAS.

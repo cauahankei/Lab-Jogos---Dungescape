@@ -20,6 +20,7 @@ ICONES_STATUS = {
     "forca": "status_forca.png",
     "vulneravel": "status_vulneravel.png",
     "fraqueza": "status_fraqueza.png",
+    "retaliacao": "status_retaliacao.png",
 }
 
 ICONES_INTENCAO = {
