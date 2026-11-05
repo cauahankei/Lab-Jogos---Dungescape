@@ -3,6 +3,7 @@ import random
 MULT_VULNERAVEL = 1.5                # GDD: vulnerável aumenta o dano recebido em 50%
 MULT_FRAQUEZA = 0.75
 STATUS_COM_DURACAO = ("vulneravel","fraqueza")  # esses perdem 1 por rodada; os outros ficam até o fim da luta
+STATUS_DE_TURNO = ("retaliacao",)    # esses somem quando o próximo turno do jogador começa
 
 
 class Combatente:
@@ -50,12 +51,19 @@ class Combatente:
     
     # vulnerável aumenta o dano recebido (arredonda pra baixo), depois o escudo
     # come o que puder e o resto vai na vida
-    def recebe_dano(self, qnt):
-        if self.tem_status("vulneravel"):
+    def recebe_dano(self, qnt, fixo=False):
+        if self.tem_status("vulneravel") and not fixo:
             qnt = int(qnt * MULT_VULNERAVEL)
         absorvido = min(self.escudo, qnt)
         self.escudo -= absorvido
         self.vida = max(0, self.vida - (qnt - absorvido))
+
+    # Retaliação: quem te atacou leva de volta um dano fixo (não usa Força nem
+    # Vulnerável), mesmo que o escudo tenha segurado o golpe. quem morreu não devolve nada
+    def retaliar(self, atacante):
+        dano = self.status.get("retaliacao", 0)
+        if dano > 0 and self.is_alive() and atacante.is_alive():
+            atacante.recebe_dano(dano, fixo=True)
 
     def recebe_escudo(self, qnt):
         self.escudo += qnt
@@ -66,6 +74,8 @@ class Combatente:
     # ainda não sabemos se o escudo vai zerar todo turno mesmo, por enquanto zera
     def start_turno(self):
         self.escudo = 0
+        for nome in STATUS_DE_TURNO:
+            self.status.pop(nome, None)
 
 
 class Inimigo(Combatente):
@@ -97,6 +107,7 @@ class Inimigo(Combatente):
         acao = self.proxima_acao
         if acao["tipo"] == "ataque":
             alvo.recebe_dano(self.dano_causado(acao["valor"]))
+            alvo.retaliar(self)
         elif acao["tipo"] == "escudo":
             self.recebe_escudo(acao["valor"])
         elif acao["tipo"] == "debuff":
