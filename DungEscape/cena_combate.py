@@ -108,6 +108,9 @@ class CenaCombate(Scene):
 
         for inimigo in self.inimigos:
             inimigo.ator.update()
+            if not inimigo.status.is_alive() and not inimigo.ator.em_acao():
+                if inimigo.ator.estado != "death":
+                    inimigo.ator.tocar("death")
 
         if self.gerenciador.estado == "turno_inimigos" and self._todos_livres():
             evento = self.gerenciador.proxima_acao_inimiga()
@@ -157,6 +160,8 @@ class CenaCombate(Scene):
         if carta.dano > 0:
             self.ator_player.tocar("attack")
             self._reagir(alvo)
+            if carta.base.get("vezes", 1) > 1:
+                Timer.after(0.3, self._segundo_golpe, alvo)
         self._garantir_alvo()
 
         print(f"{carta.nome} -> {alvo.status.nome}: {alvo.status.vida}/{alvo.status.vida_max} | "
@@ -165,6 +170,10 @@ class CenaCombate(Scene):
     # o alvo morre (se a vida zerou) ou apanha
     def _reagir(self, inimigo):
         inimigo.ator.tocar("takehit" if inimigo.status.is_alive() else "death")
+
+    def _segundo_golpe(self, inimigo):
+        if inimigo.status.is_alive():
+            inimigo.ator.tocar("takehit")
 
     def _player_apanha(self):
         self.ator_player.tocar("takehit")
