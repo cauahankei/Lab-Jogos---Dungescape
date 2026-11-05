@@ -185,6 +185,15 @@ class Baralho:
         for carta in self.todas():
             carta.sincronizar(usuario)
 
+    def adicionar(self, carta):
+        self.compra.append(carta)
+
+    def reiniciar(self):
+        self.compra = self.todas()
+        self.mao = []
+        self.descarte = []
+        random.shuffle(self.compra)
+
 
 # ---------------------------------------------------------------
 # Catálogo de cartas. Os valores são de teste (o GDD só diz "X").
@@ -218,3 +227,22 @@ def criar_carta(id_carta):
 def deck_inicial():
     receita = {"ataque": 4, "defesa": 3, "foco": 1, "fortalecer": 1, "golpe_baixo": 1}
     return [criar_carta(id_carta) for id_carta, qnt in receita.items() for _ in range(qnt)]
+
+# Cada pool é uma lista de ids do catálogo CARTAS.
+# Pra criar outro pool (cartas raras de boss, por exemplo) é só preencher a lista.
+POOLS_RECOMPENSA = {
+    "normal": ["foco", "fortalecer", "golpe_baixo"],
+    "elite": [],
+    "boss": [],
+}
+
+def sortear_recompensa(pool="normal", qtd=2):
+    ids = POOLS_RECOMPENSA.get(pool)
+    if not ids:
+        raise ValueError(f"não há cartas no pool '{pool}'")
+    qtd = min(qtd, len(ids))
+    sorteadas = random.sample(ids, qtd)
+    cartas = []
+    for id_carta in sorteadas:
+        cartas.append(criar_carta(id_carta))
+    return cartas
