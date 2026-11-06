@@ -10,6 +10,7 @@ from cartas import Baralho, deck_inicial, TAMANHO_CARTA
 from combatente import Player, criar_inimigo
 from gerenciador_combate import GerenciadorCombate
 from ator import AtorAnimado
+from iluminacao_tochas import IluminacaoTochas
 from hud import (BarraVida, OrbeEnergia, IconePilha, MaoDeCartas,
                  VisualizadorPilha, centralizado, desenhar_seta_alvo, IconeIntencao)
 import fonte_pixel
@@ -43,6 +44,7 @@ class CenaCombate(Scene):
         largura, altura = self.janela.width, self.janela.height
         self.chao_y = altura * 0.85
         self.fundo = GameImage(asset_path("assets", "Background", "background.png"))
+        self.iluminacao = IluminacaoTochas(largura, altura)
 
         # --- lógica ---
         self.player = player or Player(baralho=Baralho(deck_inicial()))
@@ -95,6 +97,7 @@ class CenaCombate(Scene):
     # ------------------------------------------------------------ lógica
     def loop(self):
         Tween.update()
+        self.iluminacao.update(self.janela.delta_time())
         if self.visualizador.aberta:
             self.visualizador.loop()
             return
@@ -231,6 +234,7 @@ class CenaCombate(Scene):
 
         baralho = self.player.baralho
         self.fundo.draw()
+        self.iluminacao.draw(self.janela.screen)
 
         self.botao_passar_turno.draw()
         self.pilha_compra.draw(len(baralho.compra))

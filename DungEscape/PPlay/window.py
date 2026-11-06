@@ -48,7 +48,11 @@ class Window:
             cls._instance = super(Window, cls).__new__(cls)
         return cls._instance
 
-    def __init__(self, largura_virtual=800, altura_virtual=600, titulo="Power PPlay 2.0", resizavel=True, pixel_art=True):
+    def __init__(
+        self, largura_virtual=800, altura_virtual=600,
+        titulo="Power PPlay 2.0", resizavel=True, pixel_art=True,
+        frame_processor=None
+    ):
         if hasattr(self, '_already_init'):
             return
         
@@ -77,6 +81,9 @@ class Window:
         # Cria o Buffer Virtual (Canvas)
         self.screen = pygame.Surface((self.largura, self.altura))
         Window.screen = self.screen # Sincroniza atributo estático
+        if frame_processor is not None and not callable(frame_processor):
+            raise TypeError("frame_processor deve ser chamável")
+        self.frame_processor = frame_processor
         
         pygame.display.set_caption(self.titulo)
         
@@ -119,17 +126,24 @@ class Window:
         # Preenche fundo (faixas pretas)
         self.real_screen.fill((0, 0, 0))
         
+        render_surface = (
+            self.frame_processor(self.screen)
+            if self.frame_processor is not None else self.screen
+        )
+        if not isinstance(render_surface, pygame.Surface):
+            raise TypeError("frame_processor deve retornar uma pygame.Surface")
+
         # Tenta realizar o redimensionamento com tratamento de erro
         try:
             if self.pixel_art:
-                scaled = pygame.transform.scale(self.screen, (nova_w, nova_h))
+                scaled = pygame.transform.scale(render_surface, (nova_w, nova_h))
             else:
-                scaled = pygame.transform.smoothscale(self.screen, (nova_w, nova_h))
+                scaled = pygame.transform.smoothscale(render_surface, (nova_w, nova_h))
             
             self.real_screen.blit(scaled, (pos_x, pos_y))
         except pygame.error:
             # Fallback caso o transform falhe por algum motivo de hardware
-            self.real_screen.blit(self.screen, (0, 0))
+            self.real_screen.blit(render_surface, (0, 0))
             
         pygame.display.flip()
         
