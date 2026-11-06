@@ -255,15 +255,16 @@ def criar_carta(id_carta):
 
 
 def deck_inicial():
-    receita = {"ataque": 4, "defesa": 3, "foco": 1, "fortalecer": 1, "golpe_baixo": 1,
-               "corte_rapido": 1, "corte_duplo": 1, "contra_ataque": 1,
-               "bater_defender": 1, "golpe_pesado": 1}
+    receita = {"ataque": 5, "defesa": 4, "golpe_baixo": 1}
+    #receita = {"ataque": 4, "defesa": 3, "foco": 1, "fortalecer": 1, "golpe_baixo": 1,
+    #               "corte_rapido": 1, "corte_duplo": 1, "contra_ataque": 1,
+    #               "bater_defender": 1, "golpe_pesado": 1}
     return [criar_carta(id_carta) for id_carta, qnt in receita.items() for _ in range(qnt)]
 
 # Cada pool é uma lista de ids do catálogo CARTAS.
 # Pra criar outro pool (cartas raras de boss, por exemplo) é só preencher a lista.
 POOLS_RECOMPENSA = {
-    "normal": ["foco", "fortalecer", "golpe_baixo"],
+    "normal": ["foco", "fortalecer", "golpe_baixo", "corte_rapido", "contra_ataque", "bater_defender", "golpe_pesado"],
     "elite": [],
     "boss": [],
 }

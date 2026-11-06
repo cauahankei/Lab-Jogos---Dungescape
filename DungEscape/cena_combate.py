@@ -1,4 +1,6 @@
 import pygame
+from PPlay.uikit import Button
+from fluxo import iniciar_combate, ir_para_recompensa
 from PPlay.scenemanager import Scene
 from PPlay.gameimage import GameImage
 from PPlay.timer import Timer
@@ -44,6 +46,7 @@ class CenaCombate(Scene):
 
         # --- lógica ---
         self.player = player or Player(baralho=Baralho(deck_inicial()))
+        self.player.baralho.reiniciar()
         status = [criar_inimigo(i) for i in inimigos]
         self.gerenciador = GerenciadorCombate(self.player, status)
 
@@ -70,12 +73,15 @@ class CenaCombate(Scene):
                                self.botao_passar_turno.x - 16)
         self.visualizador = VisualizadorPilha(TAMANHO_CARTA)
 
+        self.botao_continuar = Button(180, 48, "Continuar", cor_base=(88, 58, 44), cor_hover=(140, 92, 60))
+        self.botao_continuar.set_position((largura - 180) / 2, 300)
+        self.botao_recomecar = Button(180, 48, "Recomeçar", cor_base=(88, 58, 44), cor_hover=(140, 92, 60))
+        self.botao_recomecar.set_position((largura - 180) / 2, 300)
+
         self._hover = None
         self._pilha_pedida = None
         self._aguardando_reacao = False   # espera o player apanhar antes de liberar o input
         self.mao.organizar(self.player.baralho.mao)
-
-
 
     # até 3 inimigos, o último sempre no mesmo canto da tela
     def _posicoes_inimigos(self, n):
@@ -116,6 +122,18 @@ class CenaCombate(Scene):
             evento = self.gerenciador.proxima_acao_inimiga()
             if evento is not None:
                 self._animar_acao(evento)
+
+        resultado = self._resultado_final()
+        if resultado == "vitoria":
+            self.botao_continuar.update()
+            if self.botao_continuar.is_clicked():
+                ir_para_recompensa(self.player)
+        elif resultado == "derrota":
+            self.botao_recomecar.update()
+            if self.botao_recomecar.is_clicked():
+                iniciar_combate()
+
+
     def _cliques(self):
         mouse = self.mouse
         if not mouse.button_down(mouse.LEFT):
@@ -199,7 +217,13 @@ class CenaCombate(Scene):
                 inimigo.ator.tocar("attack")
         self._aguardando_reacao = True
         Timer.after(0.25, self._player_apanha)
-    # ------------------------------------------------------------ desenho
+
+    def _resultado_final(self):
+        resultado = self.gerenciador.resultado()
+        if resultado and self._todos_livres():
+            return resultado
+        return None
+        # ------------------------------------------------------------ desenho
     def draw(self):
         if self.visualizador.aberta:
             self.visualizador.draw()
@@ -241,3 +265,11 @@ class CenaCombate(Scene):
             # em ordem alfabética pra não entregar a ordem real das compras
             self.visualizador.abrir("Pilha de compra", sorted(baralho.compra, key=lambda c: c.nome))
         self._pilha_pedida = None
+
+        resultado = self._resultado_final()
+        if resultado == "vitoria":
+            centralizado("VITÓRIA", 200, 8, fonte_pixel.DOURADO)
+            self.botao_continuar.draw()
+        elif resultado == "derrota":
+            centralizado("DERROTA", 200, 8, fonte_pixel.VERMELHO)
+            self.botao_recomecar.draw()

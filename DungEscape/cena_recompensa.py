@@ -56,7 +56,7 @@ class CenaRecompensa(Scene):
 
     def draw(self):
         self.fundo.draw()
-        centralizado("ESCOLHA UMA CARTA", 50, 5, fonte_pixel.CREME)
+        centralizado("ESCOLHA UMA CARTA PARA ADICIONAR AO BARALHO", 50, 5, fonte_pixel.CREME)
 
         for i in range(len(self.cartas)):
             subida = 0
