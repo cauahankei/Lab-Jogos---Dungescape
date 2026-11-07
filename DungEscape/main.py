@@ -1,10 +1,10 @@
 from PPlay.window import Window
 from PPlay.scenemanager import SceneManager
-from fluxo import iniciar_combate
+from menu import CenaMenu
 
 janela = Window(1280, 720, "DungEscape")
 
-iniciar_combate()
+SceneManager.change_scene(CenaMenu())
 
 while True:
     SceneManager.run()
