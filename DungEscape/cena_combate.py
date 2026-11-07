@@ -1,4 +1,5 @@
 import pygame
+from PPlay.uikit import Button
 from PPlay.scenemanager import Scene
 from PPlay.gameimage import GameImage
 from PPlay.timer import Timer
@@ -7,6 +8,7 @@ from utils import asset_path
 from cartas import Baralho, deck_inicial, TAMANHO_CARTA
 from combatente import Player, criar_inimigo
 from gerenciador_combate import GerenciadorCombate
+from fluxo import ir_para_recompensa
 from ator import AtorAnimado
 from hud import (BarraVida, OrbeEnergia, IconePilha, MaoDeCartas,
                  VisualizadorPilha, centralizado, desenhar_seta_alvo, IconeIntencao)
@@ -44,6 +46,7 @@ class CenaCombate(Scene):
 
         # --- lógica ---
         self.player = player or Player(baralho=Baralho(deck_inicial()))
+        self.player.baralho.reiniciar()
         status = [criar_inimigo(i) for i in inimigos]
         self.gerenciador = GerenciadorCombate(self.player, status)
 
@@ -69,6 +72,14 @@ class CenaCombate(Scene):
                                self.pilha_compra.x + self.pilha_compra.largura + 16,
                                self.botao_passar_turno.x - 16)
         self.visualizador = VisualizadorPilha(TAMANHO_CARTA)
+        self.botao_continuar = Button(
+            180, 48, "Continuar", cor_base=(88, 58, 44), cor_hover=(140, 92, 60)
+        )
+        self.botao_continuar.set_position((largura - 180) / 2, 300)
+        self.botao_menu = Button(
+            180, 48, "Menu", cor_base=(40, 44, 58), cor_hover=(72, 78, 98)
+        )
+        self.botao_menu.set_position((largura - 180) / 2, 300)
 
         self._hover = None
         self._pilha_pedida = None
@@ -116,6 +127,19 @@ class CenaCombate(Scene):
             evento = self.gerenciador.proxima_acao_inimiga()
             if evento is not None:
                 self._animar_acao(evento)
+
+        resultado = self._resultado_final()
+        if resultado == "vitoria":
+            self.botao_continuar.update()
+            if self.botao_continuar.is_clicked():
+                ir_para_recompensa(self.player)
+        elif resultado == "derrota":
+            self.botao_menu.update()
+            if self.botao_menu.is_clicked():
+                from menu import CenaMenu
+                from PPlay.scenemanager import SceneManager
+                SceneManager.change_scene(CenaMenu())
+
     def _cliques(self):
         mouse = self.mouse
         if not mouse.button_down(mouse.LEFT):
@@ -190,6 +214,12 @@ class CenaCombate(Scene):
                 return False
         return True
 
+    def _resultado_final(self):
+        resultado = self.gerenciador.resultado()
+        if resultado and self._todos_livres():
+            return resultado
+        return None
+
     def _animar_acao(self, evento):
         if evento["acao"]["tipo"] != "ataque":
             return          # escudo: nada toca, o goblin continua no idle
@@ -229,10 +259,14 @@ class CenaCombate(Scene):
 
         self.mao.draw(baralho.mao, self._hover)
 
-        resultado = self.gerenciador.resultado()
-        if resultado and self._todos_livres():
+        resultado = self._resultado_final()
+        if resultado:
             centralizado("VITÓRIA" if resultado == "vitoria" else "DERROTA", 200, 8,
                          fonte_pixel.DOURADO if resultado == "vitoria" else fonte_pixel.VERMELHO)
+            if resultado == "vitoria":
+                self.botao_continuar.draw()
+            else:
+                self.botao_menu.draw()
 
         # abre por último pra o "print" da tela já pegar o frame completo
         if self._pilha_pedida == "descarte":

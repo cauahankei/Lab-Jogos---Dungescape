@@ -1,5 +1,3 @@
-import pygame
-
 from PPlay.scenemanager import Scene
 from PPlay.sprite import Sprite
 from PPlay.uikit import Button
@@ -33,11 +31,21 @@ class CenaMenu(CenaComBackground):
     def __init__(self):
         super().__init__()
         self.janela = Window.get_instance()
+        self.logo = Sprite(asset_path("assets", "Background", "logo.png"))
+        escala_logo = min(
+            self.janela.largura * 0.7 / self.logo.width,
+            self.janela.altura * 0.32 / self.logo.height,
+        )
+        self.logo.set_scale(escala_logo, escala_logo)
+        self.logo.set_position(
+            (self.janela.largura - self.logo.width * escala_logo) / 2,
+            self.janela.altura * 0.12,
+        )
+
         x = (self.janela.largura - 220) / 2
         self.jogar = criar_botao("JOGAR", x, self.janela.altura / 2)
         self.sair = criar_botao("SAIR", x, self.janela.altura / 2 + 64)
         self.botoes = [self.jogar, self.sair]
-        self.fonte_titulo = pygame.font.SysFont("Arial", 64, bold=True)
 
     def loop(self):
         for botao in self.botoes:
@@ -52,10 +60,6 @@ class CenaMenu(CenaComBackground):
 
     def draw(self):
         self.desenhar_background()
-        titulo = self.fonte_titulo.render("DUNGESCAPE", True, (242, 230, 201))
-        titulo_rect = titulo.get_rect(
-            center=(self.janela.largura / 2, self.janela.altura / 2 - 100)
-        )
-        self.janela.screen.blit(titulo, titulo_rect)
+        self.logo.draw()
         for botao in self.botoes:
             botao.draw()
