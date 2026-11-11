@@ -86,6 +86,11 @@ class Inimigo(Combatente):
         self.proxima_acao = None
         self.sortear_acao()      # já nasce sabendo o que vai fazer no 1º turno
 
+    def _sortear_numero(self, valor):
+        if isinstance(valor, tuple):
+            return random.randint(valor[0], valor[1])
+        return valor
+
     def sortear_acao(self):
         pesos = []
         for acao in self.acoes:
@@ -97,11 +102,10 @@ class Inimigo(Combatente):
 
     def _valor_da_acao(self, acao):
         if acao["tipo"] == "ataque":
-            return acao["dano"]
+            return self._sortear_numero(acao["dano"])
         if acao["tipo"] == "escudo":
-            return acao["escudo"]
-        return acao["valor"]          # buff e debuff
-
+            return self._sortear_numero(acao["escudo"])
+        return self._sortear_numero(acao["valor"])      # buff e debuff
 
     def agir(self, alvo):
         acao = self.proxima_acao
@@ -148,15 +152,15 @@ class Player(Combatente):
 INIMIGOS = {
     "goblin": dict(nome="Goblin", vida=40, ator_id="goblin",
                    acoes=[
-                       {"tipo": "ataque", "dano": 10, "peso": 70},
-                       {"tipo": "escudo", "escudo": 8, "peso": 30},
+                       {"tipo": "ataque", "dano": (8,12), "peso": 60},
+                       {"tipo": "escudo", "escudo": (6,8), "peso": 40},
                    ]),
 
     "slime": dict(nome="Slime", vida=50, ator_id="slime",
                    acoes=[
                         {"tipo": "debuff", "status": "fraqueza", "valor": 2, "peso": 20},
-                        {"tipo": "ataque", "dano": 6, "peso": 40},
-                        {"tipo": "escudo", "escudo": 10, "peso": 40},
+                        {"tipo": "ataque", "dano": (4,8), "peso": 40},
+                        {"tipo": "escudo", "escudo": (8,12), "peso": 40},
                    ]),
                    
 }
