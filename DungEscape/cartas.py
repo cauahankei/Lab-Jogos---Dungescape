@@ -174,6 +174,7 @@ class Baralho:
         self.compra = list(cartas)
         self.mao = []
         self.descarte = []
+        self.compras_pendentes = []
         self.limite_mao = limite_mao
         random.shuffle(self.compra)
 
@@ -188,7 +189,9 @@ class Baralho:
                     break
                 self.compra, self.descarte = self.descarte, []
                 random.shuffle(self.compra)
-            self.mao.append(self.compra.pop())
+            carta = self.compra.pop()
+            self.mao.append(carta)
+            self.compras_pendentes.append(carta)
 
     def descartar(self, carta):
         if carta in self.mao:
@@ -210,6 +213,7 @@ class Baralho:
         self.compra = self.todas()
         self.mao = []
         self.descarte = []
+        self.compras_pendentes = []
         random.shuffle(self.compra)
 
 
