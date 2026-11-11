@@ -1,4 +1,4 @@
-# DungEscape — Roguelike de Cartas
+# Dungescape — Roguelike de Cartas
 
 Trabalho desenvolvido para a disciplina de **Laboratório de Desenvolvimento de Jogos**, utilizando o framework **PowerPPlay 2.0 (PPlay)**.
 
