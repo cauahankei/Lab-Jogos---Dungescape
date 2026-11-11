@@ -158,8 +158,8 @@ INIMIGOS = {
 
     "slime": dict(nome="Slime", vida=50, ator_id="slime",
                    acoes=[
-                        {"tipo": "debuff", "status": "fraqueza", "valor": 2, "peso": 20},
-                        {"tipo": "ataque", "dano": (4,8), "peso": 40},
+                        {"tipo": "debuff", "status": "fraqueza", "valor": 2, "peso": 10},
+                        {"tipo": "ataque", "dano": (4,8), "peso": 50},
                         {"tipo": "escudo", "escudo": (8,12), "peso": 40},
                    ]),
                    
