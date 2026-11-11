@@ -146,17 +146,17 @@ class Player(Combatente):
 # animações dele em ator.py (com o mesmo nome do ator_id).
 # ---------------------------------------------------------------
 INIMIGOS = {
-    "goblin": dict(nome="Goblin", vida=60, ator_id="goblin",
+    "goblin": dict(nome="Goblin", vida=40, ator_id="goblin",
                    acoes=[
                        {"tipo": "ataque", "dano": 10, "peso": 70},
                        {"tipo": "escudo", "escudo": 8, "peso": 30},
                    ]),
 
-    "slime": dict(nome="Slime", vida=60, ator_id="slime",
+    "slime": dict(nome="Slime", vida=50, ator_id="slime",
                    acoes=[
-                        {"tipo": "debuff", "status": "fraqueza", "valor": 2, "peso": 40},
-                        {"tipo": "ataque", "dano": 6, "peso": 30},
-                        {"tipo": "escudo", "escudo": 10, "peso": 30},
+                        {"tipo": "debuff", "status": "fraqueza", "valor": 2, "peso": 20},
+                        {"tipo": "ataque", "dano": 6, "peso": 40},
+                        {"tipo": "escudo", "escudo": 10, "peso": 40},
                    ]),
                    
 }
