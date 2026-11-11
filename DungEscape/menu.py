@@ -3,6 +3,7 @@ from PPlay.sprite import Sprite
 from PPlay.uikit import Button
 from PPlay.window import Window
 from utils import asset_path
+from sons import iniciar_musica_menu, parar_musica_menu
 
 
 class CenaComBackground(Scene):
@@ -30,6 +31,7 @@ def criar_botao(texto, x, y):
 class CenaMenu(CenaComBackground):
     def __init__(self):
         super().__init__()
+        iniciar_musica_menu()
         self.janela = Window.get_instance()
         self.logo = Sprite(asset_path("assets", "Background", "logo.png"))
         escala_logo = min(
@@ -52,6 +54,7 @@ class CenaMenu(CenaComBackground):
             botao.update()
 
         if self.jogar.is_clicked():
+            parar_musica_menu()
             from fluxo import iniciar_combate
             iniciar_combate()
 
