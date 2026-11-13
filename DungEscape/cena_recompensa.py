@@ -4,7 +4,7 @@ from PPlay.uikit import Button
 from utils import asset_path
 from cartas import sortear_recompensa, TAMANHO_CARTA
 from hud import centralizado
-from fluxo import iniciar_combate
+from fluxo import depois_da_recompensa
 import fonte_pixel
 
 ESCALA = 4            # escala inteira, para o pixel art ficar nítido
@@ -47,12 +47,12 @@ class CenaRecompensa(Scene):
 
         self.botao_pular.update()
         if self.botao_pular.is_clicked():
-            iniciar_combate(self.player)
+            depois_da_recompensa(self.player)
             return
 
         if self.hover is not None and self.mouse.button_down(self.mouse.LEFT):
             self.player.baralho.adicionar(self.cartas[self.hover])
-            iniciar_combate(self.player)
+            depois_da_recompensa(self.player)
 
     def draw(self):
         self.fundo.draw()
