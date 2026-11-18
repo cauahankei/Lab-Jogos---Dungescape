@@ -98,7 +98,8 @@ class Inimigo(Combatente):
         escolhida = random.choices(self.acoes, weights=pesos)[0]
         self.proxima_acao = {"tipo": escolhida["tipo"],
                             "valor": self._valor_da_acao(escolhida),
-                            "status": escolhida.get("status")}
+                            "status": escolhida.get("status"),
+                            "cura": escolhida.get("cura", 0)}
 
     def _valor_da_acao(self, acao):
         if acao["tipo"] == "ataque":
@@ -110,7 +111,11 @@ class Inimigo(Combatente):
     def agir(self, alvo):
         acao = self.proxima_acao
         if acao["tipo"] == "ataque":
+            vida_antes = alvo.vida
             alvo.recebe_dano(self.dano_causado(acao["valor"]))
+            dano_efetivo = vida_antes - alvo.vida
+            cura = int(dano_efetivo * acao.get("cura", 0))
+            self.vida = min(self.vida_max, self.vida + cura)
             alvo.retaliar(self)
         elif acao["tipo"] == "escudo":
             self.recebe_escudo(acao["valor"])
@@ -155,6 +160,12 @@ INIMIGOS = {
                        {"tipo": "ataque", "dano": (8,12), "peso": 60},
                        {"tipo": "escudo", "escudo": (6,8), "peso": 40},
                    ]),
+
+    "morcegosa": dict(nome="Morcegosa", vida=40, ator_id="morcegosa",
+                      acoes=[
+                          {"tipo": "ataque", "dano": (10,14), "peso": 80, "cura": 0.8},
+                          {"tipo": "escudo", "escudo": (8,10), "peso": 20},
+                      ]),
 
     "slime": dict(nome="Slime", vida=50, ator_id="slime",
                    acoes=[

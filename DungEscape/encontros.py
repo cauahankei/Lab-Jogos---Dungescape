@@ -7,12 +7,15 @@ ENCONTROS = {
         ["slime"],
         ["goblin", "slime"],
         ["goblin", "goblin", "goblin"],
+        ["morcegosa", "morcegosa", "morcegosa"],
+        ["morcegosa", "morcegosa"],
 
     ],
 
-    "facil": [["slime"], ["goblin"], ["slime", "slime"]],
-    "medio": [["slime", "slime", "slime"], ["goblin", "slime"]],
-    "dificil": [["goblin", "slime", "slime"]],
+    #"facil": [["slime"], ["goblin"], ["morcegosa"], ["slime", "slime"]],
+    "facil": [["morcegosa"]],
+    "medio": [["slime", "slime", "slime"], ["goblin", "slime"], ["morcegosa", "slime"]],
+    "dificil": [["goblin", "slime", "slime"], ["morcegosa", "slime", "slime"]],
     "elite": [["goblin", "goblin", "goblin"], ["goblin", "goblin", "slime"]],
     "boss": [],
 }

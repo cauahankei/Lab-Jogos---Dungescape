@@ -32,6 +32,15 @@ ANIMACOES = {
             "attack":  {"arquivo": ("assets", "Slime", "Attack.png"), "frames": 19, "duracao": 600, "loop": False, "depois": "idle"}
         },
     },
+    "morcegosa": {
+        "escala": 4.0,
+        "animacoes": {
+            "idle":    {"arquivo": ("assets", "Morcegosa", "idle.png"),   "frames": 11, "duracao": 600, "loop": True},
+            "takehit": {"arquivo": ("assets", "Morcegosa", "hurt.png"),   "frames": 3,  "duracao": 400, "loop": False, "depois": "idle"},
+            "death":   {"arquivo": ("assets", "Morcegosa", "death2.png"), "frames": 7,  "duracao": 500, "loop": False},
+            "attack":  {"arquivo": ("assets", "Morcegosa", "attack.png"), "frames": 11, "duracao": 500, "loop": False, "depois": "idle"}
+        },
+    },
 }
 
 class AtorAnimado:
