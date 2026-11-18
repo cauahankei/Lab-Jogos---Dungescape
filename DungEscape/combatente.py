@@ -163,9 +163,15 @@ INIMIGOS = {
 
     "morcegosa": dict(nome="Morcegosa", vida=40, ator_id="morcegosa",
                       acoes=[
-                          {"tipo": "ataque", "dano": (10,14), "peso": 80, "cura": 0.8},
+                          {"tipo": "ataque", "dano": (7,15), "peso": 80, "cura": 0.8},
                           {"tipo": "escudo", "escudo": (8,10), "peso": 20},
                       ]),
+
+    "esqueleton": dict(nome="Esqueleton", vida=40, ator_id="esqueleton",
+                       acoes=[
+                           {"tipo": "ataque", "dano": (8,12), "peso": 60},
+                           {"tipo": "escudo", "escudo": (6,8), "peso": 40},
+                       ]),
 
     "slime": dict(nome="Slime", vida=50, ator_id="slime",
                    acoes=[

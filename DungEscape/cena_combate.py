@@ -38,6 +38,8 @@ class InimigoEmCena:
 # Uma luta: o jogador contra uma lista de inimigos (ids do catálogo em combatente.py).
 # Passa o player de fora se quiser levar vida e baralho de uma luta pra outra.
 class CenaCombate(Scene):
+    _usar_tela_resultado_padrao = True
+
     def __init__(self, inimigos=("goblin",), player=None):
         super().__init__()
         if not inimigos:
@@ -88,6 +90,7 @@ class CenaCombate(Scene):
         self._hover = None
         self._pilha_pedida = None
         self._aguardando_reacao = False   # espera o player apanhar antes de liberar o input
+        self._botao_passar_clicado_ate = 0
         self.mao.organizar(self.player.baralho.mao)
 
 
@@ -165,12 +168,12 @@ class CenaCombate(Scene):
                 self._animar_acao(evento)
 
         resultado = self._resultado_final()
-        if resultado == "vitoria" and not self._compras_em_andamento():
+        if self._usar_tela_resultado_padrao and resultado == "vitoria" and not self._compras_em_andamento():
             self.botao_continuar.update()
             if self.botao_continuar.is_clicked():
                 parar_musica_combate()
                 ir_para_recompensa(self.player)
-        elif resultado == "derrota" and not self._compras_em_andamento():
+        elif self._usar_tela_resultado_padrao and resultado == "derrota" and not self._compras_em_andamento():
             self.botao_menu.update()
             if self.botao_menu.is_clicked():
                 parar_musica_combate()
@@ -195,9 +198,30 @@ class CenaCombate(Scene):
         elif self._hover:
             self._jogar_carta(self._hover)
         elif mouse.is_over_object(self.botao_passar_turno):
+            self._botao_passar_clicado_ate = pygame.time.get_ticks() + 150
             self.gerenciador.terminar_turno_jogador()
         else:
             self._escolher_alvo_com_clique()
+
+    def _desenhar_botao_passar_turno(self):
+        botao = self.botao_passar_turno
+        mouse_sobre = (
+            self._pode_agir()
+            and not self._compras_em_andamento()
+            and self.mouse.is_over_object(botao)
+        )
+        clicado = pygame.time.get_ticks() < self._botao_passar_clicado_ate
+        escala = 0.94 if clicado else 1.08 if mouse_sobre else 1.0
+
+        x, y = botao.x, botao.y
+        botao.set_scale(escala)
+        botao.set_position(
+            x - botao.width * (escala - 1) / 2,
+            y - botao.height * (escala - 1) / 2,
+        )
+        botao.draw()
+        botao.set_position(x, y)
+        botao.set_scale(1)
 
     # se o alvo morreu, passa pro primeiro que ainda tá vivo
     def _garantir_alvo(self):
@@ -281,7 +305,7 @@ class CenaCombate(Scene):
         baralho = self.player.baralho
         self.fundo.draw()
 
-        self.botao_passar_turno.draw()
+        self._desenhar_botao_passar_turno()
         self.pilha_compra.draw(len(baralho.compra))
         self.pilha_descarte.draw(len(baralho.descarte))
         self.orbe.draw(self.player.ap, self.player.ap_max)
@@ -309,7 +333,7 @@ class CenaCombate(Scene):
             self._carta_compra_animada["imagem"].draw()
 
         resultado = self._resultado_final()
-        if resultado:
+        if resultado and self._usar_tela_resultado_padrao:
             centralizado("VITÓRIA" if resultado == "vitoria" else "DERROTA", 200, 8,
                          fonte_pixel.DOURADO if resultado == "vitoria" else fonte_pixel.VERMELHO)
             if resultado == "vitoria":

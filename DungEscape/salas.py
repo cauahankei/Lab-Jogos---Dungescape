@@ -18,9 +18,11 @@ def _botao(texto, x, y, largura=240, altura=52):
     return botao
 
 
-# Combate de uma sala do mapa: a mesma CenaCombate, mas com o player da jornada (vida e
-# baralho continuam de uma luta pra outra) e um botão "Continuar" quando a luta acaba.
+# Combate de uma sala do mapa: mantém vida e baralho entre lutas e vai direto à tela de
+# morte quando o jogador perde.
 class CombateDaJornada(CenaCombate):
+    _usar_tela_resultado_padrao = False
+
     def __init__(self, jornada, no):
         # todas as cartas voltam pra pilha de compra antes da luta
         jornada.player.baralho.reiniciar()
@@ -40,14 +42,18 @@ class CombateDaJornada(CenaCombate):
 
     def loop(self):
         super().loop()
-        if self._terminou():
+        if not self._terminou():
+            return
+        if self.gerenciador.resultado() == "derrota":
+            fluxo.fim_do_combate("derrota", self.no)
+        else:
             self.botao_continuar.update()
             if self.botao_continuar.is_clicked():
                 fluxo.fim_do_combate(self.gerenciador.resultado(), self.no)
 
     def draw(self):
         super().draw()
-        if self._terminou():
+        if self._terminou() and self.gerenciador.resultado() == "vitoria":
             self.botao_continuar.draw()
 
 

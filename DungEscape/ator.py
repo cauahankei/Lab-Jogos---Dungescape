@@ -32,6 +32,15 @@ ANIMACOES = {
             "attack":  {"arquivo": ("assets", "Slime", "Attack.png"), "frames": 19, "duracao": 600, "loop": False, "depois": "idle"}
         },
     },
+    "esqueleton": {
+        "escala": 5.0,
+        "animacoes": {
+            "idle":    {"arquivo": ("assets", "Skeleton", "Idle.png"),     "frames": 4, "duracao": 600, "loop": True},
+            "takehit": {"arquivo": ("assets", "Skeleton", "Take Hit.png"), "frames": 4, "duracao": 400, "loop": False, "depois": "idle"},
+            "death":   {"arquivo": ("assets", "Skeleton", "Death.png"),    "frames": 4, "duracao": 500, "loop": False},
+            "attack":  {"arquivo": ("assets", "Skeleton", "Attack.png"),   "frames": 8, "duracao": 500, "loop": False, "depois": "idle"}
+        },
+    },
     "morcegosa": {
         "escala": 4.0,
         "animacoes": {
