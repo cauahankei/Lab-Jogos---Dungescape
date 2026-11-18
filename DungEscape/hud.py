@@ -14,6 +14,25 @@ def _hud(arquivo):
     return asset_path("assets", "hud", arquivo)
 
 
+def _texto_com_contorno(texto, esc=2):
+    margem = 1
+    largura, altura = fonte_pixel.largura(texto, esc), 5 * esc
+    superficie = pygame.Surface(
+        (largura + margem * 2, altura + margem * 2),
+        pygame.SRCALPHA,
+    )
+    for dx in (-1, 0, 1):
+        for dy in (-1, 0, 1):
+            if dx or dy:
+                fonte_pixel.desenhar(
+                    superficie, margem + dx, margem + dy, texto, (0, 0, 0), esc=esc
+                )
+    fonte_pixel.desenhar(
+        superficie, margem, margem, texto, fonte_pixel.BRANCO, esc=esc
+    )
+    return superficie
+
+
 # Ícones dos status que aparecem embaixo da barra (o número é o valor do status).
 # Status novo: põe o PNG em assets/hud e uma linha aqui.
 ICONES_STATUS = {
@@ -39,6 +58,8 @@ class BarraVida:
         self.barra.valor_max = combatente.vida_max
         self.icone_escudo = GameImage(_hud("escudo_icone.png"))
         self.icones_status = {nome: GameImage(_hud(arq)) for nome, arq in ICONES_STATUS.items()}
+        self._valor_vida = None
+        self._texto_vida = None
 
     def posicionar(self, centro_x, y):
         self.barra.set_position(centro_x - self.barra.width / 2, y)
@@ -48,7 +69,18 @@ class BarraVida:
         barra.set_value(status.vida)
         barra.draw()
         self._desenhar_escudo(barra, status)
+        self._desenhar_vida(barra, status)
         self._desenhar_status(barra, status)
+
+    def _desenhar_vida(self, barra, status):
+        valor = (max(0, int(status.vida)), int(status.vida_max))
+        if self._valor_vida != valor:
+            self._valor_vida = valor
+            self._texto_vida = _texto_com_contorno(f"{valor[0]}/{valor[1]}")
+
+        x = barra.x + (barra.width - self._texto_vida.get_width()) / 2
+        y = barra.y + (barra.height - self._texto_vida.get_height()) / 2
+        Window.get_screen().blit(self._texto_vida, (round(x), round(y)))
 
     def _desenhar_escudo(self, barra, status):
         if status.escudo <= 0:
