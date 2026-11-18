@@ -23,11 +23,11 @@ def _botao(texto, x, y, largura=240, altura=52):
 class CombateDaJornada(CenaCombate):
     _usar_tela_resultado_padrao = False
 
-    def __init__(self, jornada, no):
+    def __init__(self, jornada, no, categoria=None):
         # todas as cartas voltam pra pilha de compra antes da luta
         jornada.player.baralho.reiniciar()
-        # a faixa da sala (facil, medio ou dificil) escolhe a lista de encontros
-        super().__init__(sortear_encontro(no.dificuldade), jornada.player)
+        # A categoria pode ser fixada para o boss; salas comuns usam a dificuldade do nó.
+        super().__init__(sortear_encontro(categoria or no.dificuldade), jornada.player)
         self.no = no
         self.botao_continuar = _botao("Continuar", self.janela.width / 2, 320)
 
@@ -46,6 +46,8 @@ class CombateDaJornada(CenaCombate):
             return
         if self.gerenciador.resultado() == "derrota":
             fluxo.fim_do_combate("derrota", self.no)
+        elif self.no.tipo == "boss":
+            fluxo.fim_do_combate("vitoria", self.no)
         else:
             self.botao_continuar.update()
             if self.botao_continuar.is_clicked():
@@ -53,7 +55,7 @@ class CombateDaJornada(CenaCombate):
 
     def draw(self):
         super().draw()
-        if self._terminou() and self.gerenciador.resultado() == "vitoria":
+        if self.no.tipo != "boss" and self._terminou() and self.gerenciador.resultado() == "vitoria":
             self.botao_continuar.draw()
 
 
@@ -133,23 +135,25 @@ class _TelaAviso(Scene):
         self.botao.draw()
 
 
-# Sala do boss: o mapa já chega aqui, mas a sala ainda não tem nada dentro.
-# Quando o boss for feito, é só trocar esta classe (a sala já recebe a jornada e o nó, igual
-# ao CombateDaJornada) e preencher ENCONTROS["boss"] em encontros.py.
-class CenaBoss(_TelaAviso):
-    TITULO = "SALA DO BOSS"
-    SUBTITULO = "AINDA NÃO IMPLEMENTADA"
-
+# Sala do boss usa a pool própria de encontros.
+class CenaBoss(CombateDaJornada):
     def __init__(self, jornada, no):
-        super().__init__()
-        self.jornada = jornada
-        self.no = no
+        super().__init__(jornada, no, categoria="boss")
 
 
 class CenaFimDeJogo(_TelaAviso):
     TITULO = "VOCÊ MORREU"
     SUBTITULO = "A MASMORRA VENCEU DESSA VEZ"
     COR = fonte_pixel.VERMELHO
+
+
+class CenaVitoria(_TelaAviso):
+    TITULO = "VITÓRIA!"
+    SUBTITULO = "VOCÊ VENCEU! Por enquanto..."
+    BOTAO = "Voltar ao menu"
+
+    def acao(self):
+        fluxo.ir_para_menu()
 
 
 # Que sala abre pra cada tipo de nó do mapa. Evento e loja entram aqui quando forem feitos

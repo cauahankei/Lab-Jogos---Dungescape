@@ -41,6 +41,13 @@ def ir_para_mapa():
     SceneManager.change_scene(CenaMapa(jornada_atual))
 
 
+def ir_para_menu():
+    global jornada_atual
+    from menu import CenaMenu
+    jornada_atual = None
+    SceneManager.change_scene(CenaMenu())
+
+
 # O mapa chama isto quando o jogador escolhe uma sala (a sala certa depende do tipo do nó)
 def entrar_na_sala(no):
     from salas import criar_sala
@@ -59,6 +66,10 @@ def depois_da_recompensa(player):
 # Botão "Continuar" do combate da jornada: ganhou vai pra recompensa, perdeu é fim de jogo
 def fim_do_combate(resultado, no):
     if resultado == "vitoria":
+        if no.tipo == "boss":
+            from salas import CenaVitoria
+            SceneManager.change_scene(CenaVitoria())
+            return
         ir_para_recompensa(jornada_atual.player)
     else:
         from salas import CenaFimDeJogo
