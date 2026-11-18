@@ -2,7 +2,6 @@ from PPlay.scenemanager import Scene
 from PPlay.sprite import Sprite
 from PPlay.uikit import Button
 from PPlay.window import Window
-import fonte_pixel
 from utils import asset_path
 from sons import iniciar_musica_menu, parar_musica_menu
 
@@ -34,6 +33,12 @@ class CenaMenu(CenaComBackground):
         super().__init__()
         iniciar_musica_menu()
         self.janela = Window.get_instance()
+        self.logo = Sprite(asset_path("assets", "Background", "logo.png"))
+        self.logo.set_scale(2.5, 2.5)
+        self.logo.set_position(
+            (self.janela.largura - self.logo.width * 2.5) / 2,
+            self.janela.altura * 0.12,
+        )
 
         x = (self.janela.largura - 220) / 2
         self.jogar = criar_botao("JOGAR", x, self.janela.altura / 2)
@@ -54,16 +59,6 @@ class CenaMenu(CenaComBackground):
 
     def draw(self):
         self.desenhar_background()
-        titulo = "DUNGESCAPE"
-        escala_titulo = 6
-        largura_titulo = fonte_pixel.largura(titulo, escala_titulo)
-        fonte_pixel.desenhar(
-            Window.get_screen(),
-            (self.janela.largura - largura_titulo) / 2,
-            self.janela.altura * 0.22,
-            titulo,
-            fonte_pixel.DOURADO,
-            esc=escala_titulo,
-        )
+        self.logo.draw()
         for botao in self.botoes:
             botao.draw()

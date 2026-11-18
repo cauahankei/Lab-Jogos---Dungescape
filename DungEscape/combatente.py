@@ -173,6 +173,12 @@ INIMIGOS = {
                            {"tipo": "escudo", "escudo": (6,8), "peso": 40},
                        ]),
 
+    "wizard": dict(nome="Wizard", vida=100, ator_id="wizard",
+                   acoes=[
+                       {"tipo": "ataque", "dano": (12,18), "peso": 70},
+                       {"tipo": "escudo", "escudo": (8,12), "peso": 30},
+                   ]),
+
     "slime": dict(nome="Slime", vida=50, ator_id="slime",
                    acoes=[
                         {"tipo": "debuff", "status": "fraqueza", "valor": 2, "peso": 10},

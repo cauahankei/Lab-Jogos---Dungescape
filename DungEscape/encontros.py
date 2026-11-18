@@ -13,12 +13,11 @@ ENCONTROS = {
 
     ],
 
-    #"facil": [["slime"], ["goblin"], ["morcegosa"], ["slime", "slime"]],
-    "facil": [["esqueleton"]],
+    "facil": [["slime"], ["goblin"], ["morcegosa"], ["slime", "slime"]],
     "medio": [["slime", "slime", "slime"], ["goblin", "slime"], ["morcegosa", "slime"], ["esqueleton", "slime"]],
     "dificil": [["goblin", "slime", "slime"], ["morcegosa", "slime", "slime"], ["esqueleton", "slime", "slime"]],
     "elite": [["goblin", "goblin", "goblin"], ["goblin", "goblin", "slime"]],
-    "boss": [],
+    "boss": [["wizard"]],
 }
 
 def sortear_encontro(categoria="normal"):

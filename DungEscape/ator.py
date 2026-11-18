@@ -50,6 +50,15 @@ ANIMACOES = {
             "attack":  {"arquivo": ("assets", "Morcegosa", "attack.png"), "frames": 11, "duracao": 500, "loop": False, "depois": "idle"}
         },
     },
+    "wizard": {
+        "escala": 4.0,
+        "animacoes": {
+            "idle":    {"arquivo": ("assets", "wizard", "Idle.png"),     "frames": 8, "duracao": 700, "loop": True},
+            "takehit": {"arquivo": ("assets", "wizard", "Take hit.png"), "frames": 3, "duracao": 400, "loop": False, "depois": "idle"},
+            "death":   {"arquivo": ("assets", "wizard", "Death.png"),    "frames": 7, "duracao": 600, "loop": False},
+            "attack":  {"arquivo": ("assets", "wizard", "Attack1.png"),  "frames": 8, "duracao": 600, "loop": False, "depois": "idle"}
+        },
+    },
 }
 
 class AtorAnimado:
