@@ -20,7 +20,13 @@ ENCONTROS = {
     "boss": [["wizard"]],
 }
 
+# Temporário: defina como None para voltar a sortear pelas pools abaixo.
+INIMIGO_FORCADO_PARA_TESTE = None
+
 def sortear_encontro(categoria="normal"):
+    if INIMIGO_FORCADO_PARA_TESTE is not None:
+        return [INIMIGO_FORCADO_PARA_TESTE]
+
     lista = ENCONTROS.get(categoria)
     if not lista:
         raise ValueError(f"não há encontros na categoria '{categoria}'")

@@ -293,7 +293,7 @@ class CenaCombate(Scene):
         audio_ataque_inimigo()
         for inimigo in self.inimigos:
             if inimigo.status is evento["inimigo"]:
-                inimigo.ator.tocar("attack")
+                inimigo.ator.tocar(evento["acao"].get("animacao") or "attack")
         self._aguardando_reacao = True
         Timer.after(0.25, self._player_apanha)
     # ------------------------------------------------------------ desenho

@@ -79,10 +79,12 @@ class Combatente:
 
 
 class Inimigo(Combatente):
-    def __init__(self, nome, vida, acoes, ator_id):
+    def __init__(self, nome, vida, acoes, ator_id, estrategia=None):
         super().__init__(nome=nome, vida=vida, vida_max=vida)
         self.acoes = acoes
         self.ator_id = ator_id
+        self.estrategia = estrategia
+        self.turno = 1
         self.proxima_acao = None
         self.sortear_acao()      # já nasce sabendo o que vai fazer no 1º turno
 
@@ -92,14 +94,15 @@ class Inimigo(Combatente):
         return valor
 
     def sortear_acao(self):
-        pesos = []
-        for acao in self.acoes:
-            pesos.append(acao["peso"])
-        escolhida = random.choices(self.acoes, weights=pesos)[0]
+        escolhida = self.estrategia(self.turno) if self.estrategia else None
+        if escolhida is None:
+            pesos = [acao["peso"] for acao in self.acoes]
+            escolhida = random.choices(self.acoes, weights=pesos)[0]
         self.proxima_acao = {"tipo": escolhida["tipo"],
                             "valor": self._valor_da_acao(escolhida),
                             "status": escolhida.get("status"),
-                            "cura": escolhida.get("cura", 0)}
+                            "cura": escolhida.get("cura", 0),
+                            "animacao": escolhida.get("animacao")}
 
     def _valor_da_acao(self, acao):
         if acao["tipo"] == "ataque":
@@ -123,6 +126,7 @@ class Inimigo(Combatente):
             alvo.aplicar_status(acao["status"], acao["valor"])
         elif acao["tipo"] == "buff":
             self.aplicar_status(acao["status"], acao["valor"])
+        self.turno += 1
         self.sortear_acao()
         return acao
 
@@ -154,6 +158,14 @@ class Player(Combatente):
 # Catálogo de inimigos. Pra criar um novo: põe uma linha aqui e as
 # animações dele em ator.py (com o mesmo nome do ator_id).
 # ---------------------------------------------------------------
+def _estrategia_wizard(turno):
+    if turno == 1:
+        return {"tipo": "debuff", "status": "fraqueza", "valor": 5}
+    if turno >= 4 and (turno - 4) % 3 == 0:
+        return {"tipo": "ataque", "dano": (20, 28), "animacao": "attack_forte"}
+    return None
+
+
 INIMIGOS = {
     "goblin": dict(nome="Goblin", vida=40, ator_id="goblin",
                    acoes=[
@@ -177,7 +189,8 @@ INIMIGOS = {
                    acoes=[
                        {"tipo": "ataque", "dano": (12,18), "peso": 70},
                        {"tipo": "escudo", "escudo": (8,12), "peso": 30},
-                   ]),
+                   ],
+                   estrategia=_estrategia_wizard),
 
     "slime": dict(nome="Slime", vida=50, ator_id="slime",
                    acoes=[
