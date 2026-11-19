@@ -26,7 +26,7 @@ class CenaPactoMorcego(Scene):
         self.perdida = max(1, self.player.vida_max * 20 // 100)
         self.resultado = None
         self.botao_sacrificar = _botao(
-            f"Perder {self.perdida} de vida máxima",
+            f"Perder {self.perdida} de vida",
             centro - 150, 430, largura=290
         )
         self.botao_recusar = _botao("Não aceitar", centro + 150, 430, largura=290)
@@ -56,13 +56,13 @@ class CenaPactoMorcego(Scene):
     def draw(self):
         Window.get_screen().blit(self.fundo, (0, 0))
         centralizado("PACTO DE MORCEGO", 40, 5, fonte_pixel.DOURADO)
-        centralizado("Uma criatura oferece força em troca de sangue.", 120, 2, fonte_pixel.CREME)
-        centralizado("Todos os Ataques do baralho serão trocados por Mordidas.", 155, 2, fonte_pixel.CREME)
-        centralizado("MORDIDA: CAUSA 5 DE DANO E CURA 3 DE VIDA", 210, 2, fonte_pixel.DOURADO)
+        centralizado("FORÇA EM TROCA DE SANGUE", 115, 3, fonte_pixel.CREME)
+        centralizado("TODOS OS ATAQUES VIRAM MORDIDAS", 175, 3, fonte_pixel.DOURADO)
+        centralizado("5 DE DANO + 2 DE VIDA", 215, 3, fonte_pixel.CREME)
         centralizado(f"VIDA MÁXIMA: {self.player.vida_max}", 340, 3, fonte_pixel.CREME)
 
         if self.resultado is None:
-            centralizado(f"PERDER {self.perdida} DE VIDA MÁXIMA?", 290, 3, fonte_pixel.VERMELHO)
+            centralizado(f"ACEITAR POR {self.perdida} DE VIDA MÁXIMA?", 290, 3, fonte_pixel.VERMELHO)
             self.botao_sacrificar.draw()
             self.botao_recusar.draw()
         else:
@@ -102,7 +102,7 @@ class CenaCaminhoEspiritual(Scene):
                     from cartas import criar_carta
                     self.player.baralho.adicionar(criar_carta(id_carta))
                     nomes = {
-                        "forma_demoniaca": "FORMA DEMONIACA",
+                        "forma_demoniaca": "FORMA DEMONÍACA",
                         "apoteose": "APOTEOSE",
                         "forma_deva": "FORMA DEVA",
                     }
@@ -116,16 +116,16 @@ class CenaCaminhoEspiritual(Scene):
     def draw(self):
         Window.get_screen().blit(self.fundo, (0, 0))
         centralizado("CAMINHO ESPIRITUAL", 40, 5, fonte_pixel.DOURADO)
-        centralizado("Escolha qual força elevará seu corpo e sua alma.", 115, 2, fonte_pixel.CREME)
+        centralizado("ESCOLHA UMA TRANSFORMAÇÃO PARA SER ADICIONADA AO BARALHO", 115, 3, fonte_pixel.CREME)
 
         tela = Window.get_screen()
         colunas = (
             (self.janela.width / 6, "SOMBRAS", fonte_pixel.VERMELHO,
-             ("Forma Demoniaca", "+3 de força por turno")),
+             ("Forma Demoníaca", "+1 de força por turno")),
             (self.janela.width / 2, "DIVINO", fonte_pixel.DOURADO,
-             ("Apoteose", "+7 de proteção por turno")),
+             ("Apoteose", "+3 de proteção por turno")),
             (self.janela.width * 5 / 6, "ALMA", fonte_pixel.VERDE,
-             ("Forma Deva", "Compra 3 cartas", "+1 de energia por turno")),
+             ("Forma Deva", "+1 de energia por turno")),
         )
         for x, titulo, cor, linhas in colunas:
             w = fonte_pixel.largura(titulo, 3)
@@ -173,19 +173,19 @@ class CenaFungoEnergetico(Scene):
 
     def draw(self):
         Window.get_screen().blit(self.fundo, (0, 0))
-        centralizado("O FUNGO ENERGETICO", 40, 5, fonte_pixel.DOURADO)
-        centralizado("Uma criatura luminosa cresce sobre seu caminho.", 120, 2, fonte_pixel.CREME)
+        centralizado("O FUNGO ENERGÉTICO", 40, 5, fonte_pixel.DOURADO)
+        centralizado("UMA CRIATURA OFERECE ENERGIA", 115, 3, fonte_pixel.CREME)
 
         if self.escolha is None:
-            centralizado("DEIXAR ENTRAR: +1 DE ENERGIA PERMANENTE", 220, 2, fonte_pixel.VERDE)
-            centralizado("TAMANHO DA MAO NO INICIO DO TURNO: 4", 258, 2, fonte_pixel.CREME)
-            centralizado("FOCO E FORMA DEVA AINDA PODEM COMPRAR CARTAS EXTRA", 296, 2, fonte_pixel.DOURADO)
-            centralizado("OU MATAR O FUNGO: GANHAR UMA CARTA", 345, 2, fonte_pixel.VERMELHO)
+            centralizado("DEIXAR ENTRAR", 210, 3, fonte_pixel.VERDE)
+            centralizado("+1 DE ENERGIA MÁXIMA", 245, 3, fonte_pixel.CREME)
+            centralizado("COMEÇA O TURNO COM -1 CARTA NA MÃO", 280, 2, fonte_pixel.CREME)
+            centralizado("OU MATAR: RECEBER UMA CARTA", 365, 3, fonte_pixel.VERMELHO)
             self.botao_aceitar.draw()
             self.botao_matar.draw()
         else:
             centralizado("O FUNGO SE UNIU A VOCÊ", 360, 3, fonte_pixel.VERDE)
-            centralizado(f"ENERGIA MAXIMA: {self.player.ap_max}", 420, 2, fonte_pixel.CREME)
+            centralizado(f"ENERGIA MÁXIMA: {self.player.ap_max}", 420, 3, fonte_pixel.CREME)
             centralizado("TAMANHO DA MÃO: 4", 448, 2, fonte_pixel.CREME)
             self.botao_continuar.draw()
 
@@ -215,17 +215,26 @@ EVENTOS = {
     "fungo_energetico": CenaFungoEnergetico,
 }
 
+# Use None para desativar ou um ID de EVENTOS para testar esse evento no início.
+EVENTO_TESTE_INICIAL = None
+
 
 class GerenciadorEventos:
-    def __init__(self, semente=None):
+    def __init__(self, semente=None, evento_inicial=None):
+        if evento_inicial is not None and evento_inicial not in EVENTOS:
+            raise ValueError(f"evento inicial desconhecido: {evento_inicial}")
         self.rng = random.Random(semente)
         self.ocorridos = set()
+        self.evento_inicial = evento_inicial
 
     def sortear(self):
         disponiveis = [id_evento for id_evento in EVENTOS if id_evento not in self.ocorridos]
         if not disponiveis:
             return None
-        id_evento = self.rng.choice(disponiveis)
+        if self.evento_inicial is not None and not self.ocorridos:
+            id_evento = self.evento_inicial
+        else:
+            id_evento = self.rng.choice(disponiveis)
         self.ocorridos.add(id_evento)
         return id_evento
 

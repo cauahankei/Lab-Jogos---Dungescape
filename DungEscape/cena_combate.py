@@ -17,6 +17,7 @@ from sons import (audio_compra, audio_usar_carta, audio_ataque_inimigo,
 import fonte_pixel
 
 MARGEM = 24
+FATOR_PIXELACAO = 4
 
 
 # Junta num lugar só tudo que um inimigo precisa na tela: ficha de combate,
@@ -47,6 +48,15 @@ class CenaCombate(Scene):
         largura, altura = self.janela.width, self.janela.height
         self.chao_y = altura * 0.85
         self.fundo = GameImage(asset_path("assets", "Background", "background.png"))
+        largura_fundo, altura_fundo = self.fundo.image.get_size()
+        tamanho_reduzido = (
+            max(1, largura_fundo // FATOR_PIXELACAO),
+            max(1, altura_fundo // FATOR_PIXELACAO),
+        )
+        fundo_reduzido = pygame.transform.scale(self.fundo.image, tamanho_reduzido)
+        self.fundo.image = pygame.transform.scale(
+            fundo_reduzido, (largura_fundo, altura_fundo)
+        )
         iniciar_musica_combate()
 
         # --- lógica ---
@@ -89,6 +99,7 @@ class CenaCombate(Scene):
 
         self._hover = None
         self._pilha_pedida = None
+        self._aviso_energia_ate = 0
         self._aguardando_reacao = False   # espera o player apanhar antes de liberar o input
         self._botao_passar_clicado_ate = 0
         self.mao.organizar(self.player.baralho.mao)
@@ -241,7 +252,7 @@ class CenaCombate(Scene):
         resultado = self.gerenciador.jogar_carta(carta, self.alvo.status)
         if not resultado["sucesso"]:
             if resultado["motivo"] == "ap_insuficiente":
-                print(f"AP insuficiente para jogar {carta.nome}!")
+                self._aviso_energia_ate = pygame.time.get_ticks() + 1200
             return
 
         audio_usar_carta()
@@ -342,6 +353,9 @@ class CenaCombate(Scene):
         self.mao.draw(cartas_visiveis, self._hover)
         if self._carta_compra_animada is not None:
             self._carta_compra_animada["imagem"].draw()
+        if pygame.time.get_ticks() < self._aviso_energia_ate:
+            centralizado("ENERGIA INSUFICIENTE", self.janela.height - 205, 3,
+                         fonte_pixel.VERMELHO)
 
         resultado = self._resultado_final()
         if resultado and self._usar_tela_resultado_padrao:

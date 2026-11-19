@@ -163,6 +163,9 @@ class Player(Combatente):
     # (se já tiver mais que isso, não compra nada)
     def start_turno(self):
         super().start_turno()
+        forca_por_turno = self.passivos_inicio.get("forca_por_turno", 0)
+        if forca_por_turno > 0:
+            self.aplicar_status("forca", forca_por_turno)
         self.ap = self.ap_max + self.passivos_inicio.get("energia", 0)
         self.recebe_escudo(self.passivos_inicio.get("escudo", 0))
         if self.baralho is not None:
@@ -176,47 +179,46 @@ class Player(Combatente):
 # ---------------------------------------------------------------
 def _estrategia_wizard(turno):
     if turno == 1:
-        return {"tipo": "debuff", "status": "fraqueza", "valor": 5}
+        return {"tipo": "debuff", "status": "fraqueza", "valor": 3}
     if turno >= 4 and (turno - 4) % 3 == 0:
-        return {"tipo": "ataque", "dano": (20, 28), "animacao": "attack_forte"}
+        return {"tipo": "ataque", "dano": (24, 30), "animacao": "attack_forte"}
     return None
 
 
 INIMIGOS = {
+    "slime": dict(nome="Slime", vida=42, ator_id="slime",
+                  acoes=[
+                      {"tipo": "ataque", "dano": (5, 8), "peso": 50},
+                      {"tipo": "escudo", "escudo": (7, 10), "peso": 35},
+                      {"tipo": "debuff", "status": "fraqueza", "valor": 2, "peso": 15},
+                  ]),
+
     "goblin": dict(nome="Goblin", vida=40, ator_id="goblin",
                    acoes=[
-                       {"tipo": "ataque", "dano": (8,12), "peso": 60},
-                       {"tipo": "escudo", "escudo": (6,8), "peso": 40},
+                       {"tipo": "ataque", "dano": (9, 13), "peso": 65},
+                       {"tipo": "escudo", "escudo": (6, 8), "peso": 35},
                    ]),
 
-    "morcegosa": dict(nome="Morcegosa", vida=40, ator_id="morcegosa",
+    "morcegosa": dict(nome="Morcegosa", vida=38, ator_id="morcegosa",
                       acoes=[
-                          {"tipo": "ataque", "dano": (7,15), "peso": 80, "cura": 0.8},
-                          {"tipo": "escudo", "escudo": (8,10), "peso": 20},
+                          {"tipo": "ataque", "dano": (8, 13), "peso": 75, "cura": 0.6},
+                          {"tipo": "escudo", "escudo": (6, 8), "peso": 25},
                       ]),
 
-    "esqueleton": dict(nome="Esqueleton", vida=40, ator_id="esqueleton",
+    "esqueleton": dict(nome="Esqueleton", vida=60, ator_id="esqueleton",
                        acoes=[
-                           {"tipo": "ataque", "dano": (8,12), "peso": 60},
-                           {"tipo": "escudo", "escudo": (6,8), "peso": 40},
+                           {"tipo": "ataque", "dano": (8, 13), "peso": 55},
+                           {"tipo": "escudo", "escudo": (8, 10), "peso": 30},
+                           {"tipo": "buff", "status": "forca", "valor": 2, "peso": 15},
                        ]),
 
-    "wizard": dict(nome="Wizard", vida=100, ator_id="wizard",
+    "wizard": dict(nome="Wizard", vida=175, ator_id="wizard",
                    acoes=[
-                       {"tipo": "ataque", "dano": (12,18), "peso": 70},
-                       {"tipo": "escudo", "escudo": (8,12), "peso": 30},
+                       {"tipo": "ataque", "dano": (14, 19), "peso": 65},
+                       {"tipo": "escudo", "escudo": (12, 16), "peso": 35},
                    ],
                    estrategia=_estrategia_wizard),
-
-    "slime": dict(nome="Slime", vida=50, ator_id="slime",
-                   acoes=[
-                        {"tipo": "debuff", "status": "fraqueza", "valor": 2, "peso": 10},
-                        {"tipo": "ataque", "dano": (4,8), "peso": 50},
-                        {"tipo": "escudo", "escudo": (8,12), "peso": 40},
-                   ]),
-                   
 }
-
 
 def criar_inimigo(id_inimigo):
     return Inimigo(**INIMIGOS[id_inimigo])

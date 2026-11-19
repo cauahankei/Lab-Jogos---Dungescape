@@ -80,6 +80,10 @@ def _efeito_forca_inicio(carta, usuario, alvo):
     _efeito_passivo(carta, usuario, alvo, "forca_inicio")
 
 
+def _efeito_forca_por_turno(carta, usuario, alvo):
+    _efeito_passivo(carta, usuario, alvo, "forca_por_turno")
+
+
 def _efeito_escudo_inicio(carta, usuario, alvo):
     _efeito_passivo(carta, usuario, alvo, "escudo_inicio")
 
@@ -102,6 +106,7 @@ EFEITOS = {
     "vulneravel_proprio": _efeito_vulneravel_proprio,
     "cura": _efeito_cura,
     "forca_inicio": _efeito_forca_inicio,
+    "forca_por_turno": _efeito_forca_por_turno,
     "escudo_inicio": _efeito_escudo_inicio,
     "compra_inicio": _efeito_compra_inicio,
     "energia_inicio": _efeito_energia_inicio,
@@ -297,7 +302,7 @@ CARTAS = {
                  descricao="Compra {compra}\ncartas do\nbaralho."),
     "fortalecer": dict(arquivo="carta_fortalecer.png", nome="Fortalecer", custo=1, forca=1,
                        descricao="Ganha {forca}\nde [força].\nAtaques\ncausam +{forca}."),
-    "golpe_baixo": dict(arquivo="carta_golpe_baixo.png", nome="Golpe Baixo", custo=2, dano=7,
+    "golpe_baixo": dict(arquivo="carta_golpe_baixo.png", nome="Golpe Baixo", custo=1, dano=4,
                         vulneravel=2,
                         descricao="Causa {dano}\nde dano e\naplica {vulneravel}\n[vulnerável]."),
     "corte_rapido": dict(arquivo="carta_corte_rapido.png", nome="Corte Rápido", custo=0, dano=3,
@@ -305,30 +310,30 @@ CARTAS = {
     "corte_duplo": dict(arquivo="carta_corte_duplo.png", nome="Corte Duplo", custo=1, dano=4,
                         vezes=2, descricao="Dano {dano}\nduas vezes."),
     "contra_ataque": dict(arquivo="carta_contra_ataque.png", nome="Contra Ataque", custo=1,
-                          retaliacao=4,
-                          descricao="Ao ser atacado, devolve {retaliacao} de dano."),
+                          escudo=3, retaliacao=4,
+                          descricao="Ganha {escudo} de\nescudo e devolve\n{retaliacao} ao ser atacado."),
     "bater_defender": dict(arquivo="carta_bater_defender.png", nome="Bater e Defender", custo=2,
-                           dano=7, escudo=5,
+                           dano=7, escudo=7,
                            descricao="Causa {dano}\nde dano e\nganha {escudo}\nde escudo."),
     "golpe_pesado": dict(arquivo="carta_golpe_pesado.png", nome="Golpe Pesado", custo=2, dano=18,
-                         vulneravel_proprio=2,
+                         vulneravel_proprio=1,
                          descricao="Causa {dano}\nde dano.\nVocê fica\n[vulnerável]."),
-    "mordida": dict(arquivo="carta_mordida.png", nome="Mordida", custo=1, dano=5, cura=3,
+    "mordida": dict(arquivo="carta_mordida.png", nome="Mordida", custo=1, dano=5, cura=2,
                     descricao="Causa {dano}\nde dano e\ncura {cura} de\nvida."),
     "forma_demoniaca": dict(
         arquivo="carta_forma_demoniaca.png", nome="Forma Demoniaca", custo=3,
-        forca_inicio=3, temporaria_batalha=True,
-        descricao="No início de\ncada turno,\nganha {forca_inicio}\nde [força].",
+        forca_por_turno=1, temporaria_batalha=True,
+        descricao="A cada turno,\nganha +{forca_por_turno}\nde [força].",
     ),
     "apoteose": dict(
         arquivo="carta_apoteose.png", nome="Apoteose", custo=3,
-        escudo_inicio=7, temporaria_batalha=True,
+        escudo_inicio=3, temporaria_batalha=True,
         descricao="No início de\ncada turno,\nganha {escudo_inicio}\nde [proteção].",
     ),
     "forma_deva": dict(
         arquivo="carta_forma_deva.png", nome="Forma Deva", custo=3,
-        compra_inicio=3, energia_inicio=1, temporaria_batalha=True,
-        descricao="No início de\ncada turno,\ncompra {compra_inicio}\n+ ganha {energia_inicio}\nde [energia].",
+         energia_inicio=1, temporaria_batalha=True,
+        descricao="No início de\ncada turno,\nganha {energia_inicio}\nde [energia].",
     ),
 }
 

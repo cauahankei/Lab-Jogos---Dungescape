@@ -65,15 +65,16 @@ class _VidaExibida:
         self.vida, self.vida_max, self.escudo, self.status = vida, player.vida_max, 0, {}
 
 
-# Fogueira: restaura a vida do jogador ao máximo assim que ele chega.
+# Fogueira: cura 30% da vida máxima do jogador.
 class CenaFogueira(Scene):
     def __init__(self, jornada, no):
         super().__init__()
         player = jornada.player
-        self.curou = player.vida_max - player.vida
         self.exibida = _VidaExibida(player, player.vida)
-        player.vida = player.vida_max
-        Tween.to(self.exibida, "vida", player.vida_max, 1.4, "ease_out")
+        cura = player.vida_max * 30 // 100
+        player.vida = min(player.vida_max, player.vida + cura)
+        self.curou = player.vida - self.exibida.vida
+        Tween.to(self.exibida, "vida", player.vida, 1.4, "ease_out")
 
         self.player = player
         self.fundo = fundo_borrado(150)

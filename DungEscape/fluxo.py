@@ -31,10 +31,14 @@ class Jornada:
         from combatente import Player
         from cartas import Baralho, deck_inicial
         from mapa import Mapa
-        from eventos import GerenciadorEventos
+        from eventos import EVENTO_TESTE_INICIAL, GerenciadorEventos
         self.player = Player(baralho=Baralho(deck_inicial()))
         self.mapa = Mapa.gerar(semente)
-        self.eventos = GerenciadorEventos(semente)
+        if EVENTO_TESTE_INICIAL is not None:
+            for no in self.mapa.inicio():
+                no.tipo = "evento"
+                no.dificuldade = None
+        self.eventos = GerenciadorEventos(semente, EVENTO_TESTE_INICIAL)
 
 
 def iniciar_jornada(semente=None):

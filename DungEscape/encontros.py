@@ -3,21 +3,36 @@ import random
 # Pra criar outra categoria (elite, boss...) é só preencher a lista dela.
 # obs: o max de inimigos em 1 combate é 3, não colocar mais que isso se não dá merda
 ENCONTROS = {
-    "normal": [
+    "facil": [
         ["slime"],
+        ["goblin"],
+        ["morcegosa"],
         ["goblin", "slime"],
-        ["goblin", "goblin", "goblin"],
-        ["esqueleton"],
-        ["morcegosa", "morcegosa", "morcegosa"],
-        ["morcegosa", "morcegosa"],
-
     ],
-
-    "facil": [["slime"], ["goblin"], ["morcegosa"], ["slime", "slime"]],
-    "medio": [["slime", "slime", "slime"], ["goblin", "slime"], ["morcegosa", "slime"], ["esqueleton", "slime"]],
-    "dificil": [["goblin", "slime", "slime"], ["morcegosa", "slime", "slime"], ["esqueleton", "slime", "slime"]],
-    "elite": [["goblin", "goblin", "goblin"], ["goblin", "goblin", "slime"]],
-    "boss": [["wizard"]],
+    "medio": [
+        ["esqueleton"],
+        ["goblin", "goblin"],
+        ["morcegosa", "goblin"],
+        ["goblin", "slime", "slime"],
+    ],
+    "dificil": [
+        ["esqueleton", "goblin"],
+        ["esqueleton", "morcegosa"],
+        ["esqueleton", "slime", "slime"],
+        ["goblin", "goblin", "morcegosa"],
+    ],
+    "normal": [
+        ["esqueleton"],
+        ["goblin", "goblin"],
+        ["morcegosa", "goblin"],
+    ],
+    "elite": [
+        ["esqueleton", "goblin"],
+        ["esqueleton", "morcegosa"],
+    ],
+    "boss": [
+        ["wizard"],
+    ],
 }
 
 # Temporário: defina como None para voltar a sortear pelas pools abaixo.
