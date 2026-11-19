@@ -68,6 +68,10 @@ class Combatente:
     def recebe_escudo(self, qnt):
         self.escudo += qnt
 
+    def curar(self, qnt):
+        if qnt > 0 and self.is_alive():
+            self.vida = min(self.vida_max, self.vida + qnt)
+
     def is_alive(self):
         return self.vida > 0
 
@@ -137,6 +141,16 @@ class Player(Combatente):
         self.ap = ap_max
         self.baralho = baralho
         self.tamanho_mao = tamanho_mao
+        self.passivos_inicio = {}
+
+    def ativar_passivo(self, nome, valor):
+        self.passivos_inicio[nome] = self.passivos_inicio.get(nome, 0) + valor
+
+    def finalizar_batalha(self):
+        self.passivos_inicio = {}
+
+    def dano_causado(self, base):
+        return super().dano_causado(base + self.passivos_inicio.get("forca", 0))
 
     # False (sem gastar nada) se não tiver AP pra pagar a carta
     def gasta_ap(self, custo):
@@ -149,9 +163,11 @@ class Player(Combatente):
     # (se já tiver mais que isso, não compra nada)
     def start_turno(self):
         super().start_turno()
-        self.ap = self.ap_max
+        self.ap = self.ap_max + self.passivos_inicio.get("energia", 0)
+        self.recebe_escudo(self.passivos_inicio.get("escudo", 0))
         if self.baralho is not None:
             self.baralho.comprar(self.tamanho_mao - len(self.baralho.mao))
+            self.baralho.comprar(self.passivos_inicio.get("compra", 0))
 
 
 # ---------------------------------------------------------------

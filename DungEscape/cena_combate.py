@@ -309,6 +309,17 @@ class CenaCombate(Scene):
         self.pilha_compra.draw(len(baralho.compra))
         self.pilha_descarte.draw(len(baralho.descarte))
         self.orbe.draw(self.player.ap, self.player.ap_max)
+        efeitos = []
+        if self.player.passivos_inicio.get("forca", 0):
+            efeitos.append(f"+{self.player.passivos_inicio['forca']} FORÇA")
+        if self.player.passivos_inicio.get("escudo", 0):
+            efeitos.append(f"+{self.player.passivos_inicio['escudo']} PROTEÇÃO")
+        if self.player.passivos_inicio.get("compra", 0):
+            efeitos.append(f"COMPRA {self.player.passivos_inicio['compra']}")
+        if self.player.passivos_inicio.get("energia", 0):
+            efeitos.append(f"+{self.player.passivos_inicio['energia']} ENERGIA")
+        if efeitos:
+            centralizado("EM USO: " + " | ".join(efeitos), 92, 2, fonte_pixel.DOURADO)
 
         self.ator_player.draw()
         self.barra_player.draw()

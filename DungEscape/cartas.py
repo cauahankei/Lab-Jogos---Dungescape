@@ -65,6 +65,33 @@ def _efeito_vulneravel_proprio(carta, usuario, alvo):
     usuario.aplicar_status("vulneravel", carta.base["vulneravel_proprio"])
 
 
+def _efeito_cura(carta, usuario, alvo):
+    usuario.curar(carta.base["cura"])
+
+
+def _efeito_passivo(carta, usuario, alvo, campo):
+    valor = carta.base.get(campo, 0)
+    if valor > 0:
+        nome = campo.removesuffix("_inicio")
+        usuario.ativar_passivo(nome, valor)
+
+
+def _efeito_forca_inicio(carta, usuario, alvo):
+    _efeito_passivo(carta, usuario, alvo, "forca_inicio")
+
+
+def _efeito_escudo_inicio(carta, usuario, alvo):
+    _efeito_passivo(carta, usuario, alvo, "escudo_inicio")
+
+
+def _efeito_compra_inicio(carta, usuario, alvo):
+    _efeito_passivo(carta, usuario, alvo, "compra_inicio")
+
+
+def _efeito_energia_inicio(carta, usuario, alvo):
+    _efeito_passivo(carta, usuario, alvo, "energia_inicio")
+
+
 EFEITOS = {
     "dano": _efeito_dano,
     "escudo": _efeito_escudo,
@@ -73,6 +100,11 @@ EFEITOS = {
     "retaliacao": _efeito_retaliacao,
     "vulneravel": _efeito_vulneravel,
     "vulneravel_proprio": _efeito_vulneravel_proprio,
+    "cura": _efeito_cura,
+    "forca_inicio": _efeito_forca_inicio,
+    "escudo_inicio": _efeito_escudo_inicio,
+    "compra_inicio": _efeito_compra_inicio,
+    "energia_inicio": _efeito_energia_inicio,
 }
 
 
@@ -82,8 +114,12 @@ EFEITOS = {
 # dano e escudo são atributos normais (o resto do jogo usa); qualquer outro
 # número da carta (comprar, retaliação, força...) vai em carta.extras["nome"].
 class Carta(Sprite):
-    def __init__(self, imagem, nome, custo, dano=0, escudo=0, descricao="", **extras):
+    def __init__(self, imagem, nome, custo, dano=0, escudo=0, descricao="", id_carta=None,
+                 temporaria_batalha=False, **extras):
         Sprite.__init__(self, imagem)
+        self.id_carta = id_carta
+        self.temporaria_batalha = temporaria_batalha
+        self.em_uso_batalha = False
         self.nome = nome
         self.custo = custo
         self.dano = dano
@@ -174,6 +210,7 @@ class Baralho:
         self.compra = list(cartas)
         self.mao = []
         self.descarte = []
+        self.temporarias_batalha = []
         self.compras_pendentes = []
         self.limite_mao = limite_mao
         random.shuffle(self.compra)
@@ -198,8 +235,21 @@ class Baralho:
             self.mao.remove(carta)
             self.descarte.append(carta)
 
+    def usar_temporaria(self, carta):
+        if carta in self.mao:
+            self.mao.remove(carta)
+        if carta in self.compra:
+            self.compra.remove(carta)
+        if carta in self.descarte:
+            self.descarte.remove(carta)
+        if carta in self.compras_pendentes:
+            self.compras_pendentes.remove(carta)
+        carta.em_uso_batalha = True
+        if carta not in self.temporarias_batalha:
+            self.temporarias_batalha.append(carta)
+
     def todas(self):
-        return self.compra + self.mao + self.descarte
+        return self.compra + self.mao + self.descarte + self.temporarias_batalha
 
     # atualiza o dano de todas as cartas (mão e pilhas) pro jogador atual
     def sincronizar(self, usuario):
@@ -209,11 +259,25 @@ class Baralho:
     def adicionar(self, carta):
         self.compra.append(carta)
 
+    def substituir_cartas(self, id_antigo, id_novo):
+        substituidas = 0
+        for pilha in (self.compra, self.mao, self.descarte):
+            for i, carta in enumerate(pilha):
+                if carta.id_carta == id_antigo:
+                    pilha[i] = criar_carta(id_novo)
+                    substituidas += 1
+        return substituidas
+
     def reiniciar(self):
-        self.compra = self.todas()
+        cartas_temp = list(self.temporarias_batalha)
+        self.compra = self.compra + self.mao + self.descarte + cartas_temp
         self.mao = []
         self.descarte = []
         self.compras_pendentes = []
+        self.temporarias_batalha = []
+        for carta in self.compra:
+            if carta.temporaria_batalha:
+                carta.em_uso_batalha = False
         random.shuffle(self.compra)
 
 
@@ -249,13 +313,30 @@ CARTAS = {
     "golpe_pesado": dict(arquivo="carta_golpe_pesado.png", nome="Golpe Pesado", custo=2, dano=18,
                          vulneravel_proprio=2,
                          descricao="Causa {dano}\nde dano.\nVocê fica\n[vulnerável]."),
+    "mordida": dict(arquivo="carta_mordida.png", nome="Mordida", custo=1, dano=5, cura=3,
+                    descricao="Causa {dano}\nde dano e\ncura {cura} de\nvida."),
+    "forma_demoniaca": dict(
+        arquivo="carta_forma_demoniaca.png", nome="Forma Demoniaca", custo=3,
+        forca_inicio=3, temporaria_batalha=True,
+        descricao="No início de\ncada turno,\nganha {forca_inicio}\nde [força].",
+    ),
+    "apoteose": dict(
+        arquivo="carta_apoteose.png", nome="Apoteose", custo=3,
+        escudo_inicio=7, temporaria_batalha=True,
+        descricao="No início de\ncada turno,\nganha {escudo_inicio}\nde [proteção].",
+    ),
+    "forma_deva": dict(
+        arquivo="carta_forma_deva.png", nome="Forma Deva", custo=3,
+        compra_inicio=3, energia_inicio=1, temporaria_batalha=True,
+        descricao="No início de\ncada turno,\ncompra {compra_inicio}\n+ ganha {energia_inicio}\nde [energia].",
+    ),
 }
 
 
 def criar_carta(id_carta):
     dados = dict(CARTAS[id_carta])
     arquivo = dados.pop("arquivo")
-    return Carta(asset_path("assets", "Cartas", arquivo), **dados)
+    return Carta(asset_path("assets", "Cartas", arquivo), id_carta=id_carta, **dados)
 
 
 def deck_inicial():
