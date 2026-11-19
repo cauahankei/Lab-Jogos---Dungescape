@@ -166,6 +166,8 @@ SALAS = {
 
 
 def criar_sala(jornada, no):
+    if no.tipo == "evento":
+        return jornada.eventos.criar_cena(jornada, no)
     if no.tipo not in SALAS:
         raise NotImplementedError(f"ainda não existe sala do tipo '{no.tipo}'")
     return SALAS[no.tipo](jornada, no)
