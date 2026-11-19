@@ -1,7 +1,7 @@
 from PPlay.scenemanager import Scene
-from PPlay.gameimage import GameImage
 from PPlay.uikit import Button
 from utils import asset_path
+from efeitos_visuais import FundoCombate
 from cartas import sortear_recompensa, TAMANHO_CARTA
 from hud import centralizado
 from fluxo import depois_da_recompensa
@@ -17,7 +17,7 @@ class CenaRecompensa(Scene):
         super().__init__()
         self.player = player
         self.ao_concluir = ao_concluir
-        self.fundo = GameImage(asset_path("assets", "Background", "background.png"))
+        self.fundo = FundoCombate(asset_path("assets", "Background", "background.png"))
 
         self.cartas = sortear_recompensa("normal", 2)
         for carta in self.cartas:

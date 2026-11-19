@@ -5,6 +5,7 @@ from PPlay.gameimage import GameImage
 from PPlay.timer import Timer
 from PPlay.tween import Tween
 from utils import asset_path
+from efeitos_visuais import FundoCombate
 from cartas import Baralho, deck_inicial, TAMANHO_CARTA
 from combatente import Player, criar_inimigo
 from gerenciador_combate import GerenciadorCombate
@@ -17,7 +18,6 @@ from sons import (audio_compra, audio_usar_carta, audio_ataque_inimigo,
 import fonte_pixel
 
 MARGEM = 24
-FATOR_PIXELACAO = 4
 
 
 # Junta num lugar só tudo que um inimigo precisa na tela: ficha de combate,
@@ -47,16 +47,7 @@ class CenaCombate(Scene):
             raise ValueError("a luta precisa de pelo menos 1 inimigo")
         largura, altura = self.janela.width, self.janela.height
         self.chao_y = altura * 0.85
-        self.fundo = GameImage(asset_path("assets", "Background", "background.png"))
-        largura_fundo, altura_fundo = self.fundo.image.get_size()
-        tamanho_reduzido = (
-            max(1, largura_fundo // FATOR_PIXELACAO),
-            max(1, altura_fundo // FATOR_PIXELACAO),
-        )
-        fundo_reduzido = pygame.transform.scale(self.fundo.image, tamanho_reduzido)
-        self.fundo.image = pygame.transform.scale(
-            fundo_reduzido, (largura_fundo, altura_fundo)
-        )
+        self.fundo = FundoCombate(asset_path("assets", "Background", "background.png"))
         iniciar_musica_combate()
 
         # --- lógica ---

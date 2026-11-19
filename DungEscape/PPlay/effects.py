@@ -96,3 +96,22 @@ class LightingSystem:
         # MULT escurece o que está embaixo mantendo a cor das luzes
         Window.get_screen().blit(self.fog, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
         self.lights = []
+
+    def draw_glow(self):
+        tela = Window.get_screen()
+
+        for lx, ly, raio, intensidade in self.lights:
+            cam = Camera.get_instance()
+            tx = cam.transform_x(lx) if cam else lx
+            ty = cam.transform_y(ly) if cam else ly
+
+            luz = pygame.Surface((raio * 2, raio * 2), pygame.SRCALPHA)
+            for r in range(raio, 0, -4):
+                alpha = int(intensidade * (1 - r / raio))
+                pygame.draw.circle(
+                    luz, (255, 200, 100, alpha), (raio, raio), r
+                )
+
+            tela.blit(luz, (tx - raio, ty - raio))
+
+        self.lights = []
