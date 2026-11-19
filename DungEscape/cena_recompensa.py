@@ -13,9 +13,10 @@ SUBIDA_HOVER = 12     # quanto a carta sobe quando o mouse está em cima
 
 
 class CenaRecompensa(Scene):
-    def __init__(self, player):
+    def __init__(self, player, ao_concluir=None):
         super().__init__()
         self.player = player
+        self.ao_concluir = ao_concluir
         self.fundo = GameImage(asset_path("assets", "Background", "background.png"))
 
         self.cartas = sortear_recompensa("normal", 2)
@@ -47,12 +48,18 @@ class CenaRecompensa(Scene):
 
         self.botao_pular.update()
         if self.botao_pular.is_clicked():
-            depois_da_recompensa(self.player)
+            if self.ao_concluir is None:
+                depois_da_recompensa(self.player)
+            else:
+                self.ao_concluir(self.player)
             return
 
         if self.hover is not None and self.mouse.button_down(self.mouse.LEFT):
             self.player.baralho.adicionar(self.cartas[self.hover])
-            depois_da_recompensa(self.player)
+            if self.ao_concluir is None:
+                depois_da_recompensa(self.player)
+            else:
+                self.ao_concluir(self.player)
 
     def draw(self):
         self.fundo.draw()
