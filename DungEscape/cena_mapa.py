@@ -11,8 +11,8 @@ from hud import IconePilha, VisualizadorPilha, desenhar_seta_alvo
 import fonte_pixel
 import fluxo
 
-ESPACO_X = 70            # distância entre colunas
-ESPACO_Y = 104           # distância entre andares
+ESPACO_X = 78            # distância entre colunas
+ESPACO_Y = 112           # distância entre andares
 MARGEM_TOPO = 190        # sobra em cima do boss
 MARGEM_BASE = 150        # sobra embaixo do 1º andar
 ALTURA_BARRA = 76        # barra de vida/andar/baralho lá em cima

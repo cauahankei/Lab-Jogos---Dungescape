@@ -13,6 +13,11 @@ def ir_para_recompensa(player):
     from cena_recompensa import CenaRecompensa
     SceneManager.change_scene(CenaRecompensa(player))
 
+
+def ir_para_recompensa_evento(player):
+    from cena_recompensa import CenaRecompensa
+    SceneManager.change_scene(CenaRecompensa(player, ao_concluir=lambda _: ir_para_mapa()))
+
 # ---------------------------------------------------------------------------
 # Jornada: uma partida inteira, do começo do mapa até o boss.
 # ---------------------------------------------------------------------------
@@ -26,8 +31,10 @@ class Jornada:
         from combatente import Player
         from cartas import Baralho, deck_inicial
         from mapa import Mapa
+        from eventos import GerenciadorEventos
         self.player = Player(baralho=Baralho(deck_inicial()))
         self.mapa = Mapa.gerar(semente)
+        self.eventos = GerenciadorEventos(semente)
 
 
 def iniciar_jornada(semente=None):

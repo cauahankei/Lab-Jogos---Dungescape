@@ -3,13 +3,13 @@
 # os caminhos vão se abrindo e juntando, e no topo tem uma única sala de boss.
 import random
 
-ANDARES = 12     # contando o andar do boss (o último)
-COLUNAS = 7
-CAMINHOS = 6     # quantos caminhos saem do começo (as pontas podem se encontrar no meio)
+ANDARES = 18     # contando o andar do boss (o último)
+COLUNAS = 8
+CAMINHOS = 7     # quantos caminhos saem do começo (as pontas podem se encontrar no meio)
 
 # Chance de cada tipo nas salas "livres". Evento e loja ainda não têm sala pra entrar,
 # então ficam com peso 0. Quando forem feitos, é só subir o peso aqui.
-PESOS = {"combate": 78, "fogueira": 22, "evento": 0, "loja": 0}
+PESOS = {"combate": 70, "fogueira": 16, "evento": 14, "loja": 0}
 
 # a partir de qual andar cada tipo pode aparecer (nada de descanso logo no começo)
 ANDAR_MINIMO = {"fogueira": 3, "loja": 2, "evento": 1}
@@ -18,7 +18,11 @@ ANDAR_MINIMO = {"fogueira": 3, "loja": 2, "evento": 1}
 SEM_REPETIR = ("fogueira", "loja")
 
 # Andares em que TODAS as salas são fogueira, além do que vem antes do boss.
-FOGUEIRAS_FIXAS_EXTRA = ()
+FOGUEIRAS_FIXAS_EXTRA = (4, 6, 9, 11, 13, 16)
+
+# O piso 2 e o piso 15 são eventos em todo caminho. Os pisos 4, 6 e 9 dividem
+# a fase média; 11 e 13 dividem a fase difícil; 16 vem antes do boss.
+EVENTOS_FIXOS = (2, 15)
 
 # A fogueira é a única cura do jogo, então ela tem que estar ao alcance de qualquer caminho.
 # CARGA é quanto de vida cada luta custa em média pra um jogador comum (que lê as intenções
@@ -27,7 +31,7 @@ FOGUEIRAS_FIXAS_EXTRA = ()
 # fogueiras (56 = 70% dos 80 de vida do jogador). Se mexer nos inimigos, nas cartas ou nas
 # listas de encontros, refaz a medição, senão o mapa fica injusto sem ninguém perceber.
 # CARGA_MAXIMA não pode ser menor que a maior CARGA, senão nenhuma fogueira resolve.
-CARGA = {"facil": 10, "medio": 26, "dificil": 45}
+CARGA = {"facil": 10, "medio": 26, "dificil": 45, "evento": 0}
 CARGA_MAXIMA = 56
 
 
@@ -35,14 +39,13 @@ CARGA_MAXIMA = 56
 # descanso do boss) é difícil. Dois andares difíceis seguidos obrigariam fogueira em todo o
 # andar do meio, e o mapa ficaria sempre igual.
 def dificuldade_do_andar(andar, andares=ANDARES):
-    # os andares de combate vão de 0 até andares-3; o antes do boss é descanso
-    regulares = andares - 2
-    posicao = andar / regulares
-    if posicao < 0.3:
+    if andar in (0, 1, 3):
         return "facil"
-    if posicao < 0.9:
+    if andar in (5, 7, 8):
         return "medio"
-    return "dificil"
+    if andar in (10, 12, 14):
+        return "dificil"
+    return None
 
 
 class NoSala:
@@ -181,11 +184,25 @@ def _sortear_tipos(rng, mapa, pesos):
     for no in mapa.por_andar[0]:
         no.tipo = "combate"
 
+    # Zonas balanceadas por andar. Primeiro vem uma fase fácil, depois média,
+    # uma separação com fogueira e por fim três combates difíceis.
     for andar in range(1, antes_do_boss):
         if andar in fixos:
             continue
+        if andar in EVENTOS_FIXOS:
+            for no in mapa.por_andar[andar]:
+                no.tipo = "evento"
+            continue
+
         for no in mapa.por_andar[andar]:
-            no.tipo = _tipo_livre(rng, no, andar, pesos)
+            if andar in (1, 3):
+                no.tipo = "combate"
+            elif andar in (5, 7, 8):
+                no.tipo = "combate"
+            elif andar in (10, 12, 14):
+                no.tipo = "combate"
+            else:
+                no.tipo = _tipo_livre(rng, no, andar, pesos)
 
     for no in mapa.todos():
         if no.tipo == "combate":
@@ -232,7 +249,8 @@ def _primeiro_estouro(mapa):
                 valor = 0 if pai.tipo == "fogueira" else acumulado[pai][0]
                 if valor >= base:
                     base, pai_pior = valor, pai
-            acumulado[no] = (base + CARGA[no.dificuldade], pai_pior)
+            carga = CARGA.get(no.dificuldade, CARGA["evento"])
+            acumulado[no] = (base + carga, pai_pior)
             if acumulado[no][0] > CARGA_MAXIMA:
                 cadeia, atual = [no], pai_pior
                 while atual is not None and atual.tipo == "combate":
