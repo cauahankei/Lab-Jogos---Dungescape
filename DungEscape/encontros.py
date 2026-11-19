@@ -7,13 +7,26 @@ ENCONTROS = {
         ["slime"],
         ["goblin", "slime"],
         ["goblin", "goblin", "goblin"],
+        ["esqueleton"],
+        ["morcegosa", "morcegosa", "morcegosa"],
+        ["morcegosa", "morcegosa"],
 
     ],
-    "elite": [],
-    "boss": [],
+
+    "facil": [["slime"], ["goblin"], ["morcegosa"], ["slime", "slime"]],
+    "medio": [["slime", "slime", "slime"], ["goblin", "slime"], ["morcegosa", "slime"], ["esqueleton", "slime"]],
+    "dificil": [["goblin", "slime", "slime"], ["morcegosa", "slime", "slime"], ["esqueleton", "slime", "slime"]],
+    "elite": [["goblin", "goblin", "goblin"], ["goblin", "goblin", "slime"]],
+    "boss": [["wizard"]],
 }
 
+# Temporário: defina como None para voltar a sortear pelas pools abaixo.
+INIMIGO_FORCADO_PARA_TESTE = None
+
 def sortear_encontro(categoria="normal"):
+    if INIMIGO_FORCADO_PARA_TESTE is not None:
+        return [INIMIGO_FORCADO_PARA_TESTE]
+
     lista = ENCONTROS.get(categoria)
     if not lista:
         raise ValueError(f"não há encontros na categoria '{categoria}'")

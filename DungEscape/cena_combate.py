@@ -1,6 +1,5 @@
 import pygame
 from PPlay.uikit import Button
-from fluxo import iniciar_combate, ir_para_recompensa
 from PPlay.scenemanager import Scene
 from PPlay.gameimage import GameImage
 from PPlay.timer import Timer
@@ -9,9 +8,12 @@ from utils import asset_path
 from cartas import Baralho, deck_inicial, TAMANHO_CARTA
 from combatente import Player, criar_inimigo
 from gerenciador_combate import GerenciadorCombate
+from fluxo import ir_para_recompensa
 from ator import AtorAnimado
 from hud import (BarraVida, OrbeEnergia, IconePilha, MaoDeCartas,
                  VisualizadorPilha, centralizado, desenhar_seta_alvo, IconeIntencao)
+from sons import (audio_compra, audio_usar_carta, audio_ataque_inimigo,
+                  iniciar_musica_combate, parar_musica_combate)
 import fonte_pixel
 
 MARGEM = 24
@@ -36,6 +38,8 @@ class InimigoEmCena:
 # Uma luta: o jogador contra uma lista de inimigos (ids do catálogo em combatente.py).
 # Passa o player de fora se quiser levar vida e baralho de uma luta pra outra.
 class CenaCombate(Scene):
+    _usar_tela_resultado_padrao = True
+
     def __init__(self, inimigos=("goblin",), player=None):
         super().__init__()
         if not inimigos:
@@ -43,6 +47,7 @@ class CenaCombate(Scene):
         largura, altura = self.janela.width, self.janela.height
         self.chao_y = altura * 0.85
         self.fundo = GameImage(asset_path("assets", "Background", "background.png"))
+        iniciar_musica_combate()
 
         # --- lógica ---
         self.player = player or Player(baralho=Baralho(deck_inicial()))
@@ -71,17 +76,24 @@ class CenaCombate(Scene):
         self.mao = MaoDeCartas(TAMANHO_CARTA,
                                self.pilha_compra.x + self.pilha_compra.largura + 16,
                                self.botao_passar_turno.x - 16)
+        self._carta_compra_animada = None
         self.visualizador = VisualizadorPilha(TAMANHO_CARTA)
-
-        self.botao_continuar = Button(180, 48, "Continuar", cor_base=(88, 58, 44), cor_hover=(140, 92, 60))
+        self.botao_continuar = Button(
+            180, 48, "Continuar", cor_base=(88, 58, 44), cor_hover=(140, 92, 60)
+        )
         self.botao_continuar.set_position((largura - 180) / 2, 300)
-        self.botao_recomecar = Button(180, 48, "Recomeçar", cor_base=(88, 58, 44), cor_hover=(140, 92, 60))
-        self.botao_recomecar.set_position((largura - 180) / 2, 300)
+        self.botao_menu = Button(
+            180, 48, "Menu", cor_base=(40, 44, 58), cor_hover=(72, 78, 98)
+        )
+        self.botao_menu.set_position((largura - 180) / 2, 300)
 
         self._hover = None
         self._pilha_pedida = None
         self._aguardando_reacao = False   # espera o player apanhar antes de liberar o input
+        self._botao_passar_clicado_ate = 0
         self.mao.organizar(self.player.baralho.mao)
+
+
 
     # até 3 inimigos, o último sempre no mesmo canto da tela
     def _posicoes_inimigos(self, n):
@@ -90,7 +102,38 @@ class CenaCombate(Scene):
 
     def _pode_agir(self):
         return (self.gerenciador.estado == "turno_jogador" and not self._aguardando_reacao
-                and self.gerenciador.resultado() is None)
+                and self.gerenciador.resultado() is None
+                and not self._compras_em_andamento())
+
+    def _compras_em_andamento(self):
+        return (self._carta_compra_animada is not None
+                or bool(self.player.baralho.compras_pendentes))
+
+    def _atualizar_animacao_compra(self):
+        if self._carta_compra_animada is not None:
+            return
+
+        fila = self.player.baralho.compras_pendentes
+        if not fila:
+            return
+
+        carta = fila.pop(0)
+        verso = GameImage(asset_path("assets", "Cartas", "carta1.png"))
+        verso.set_scale(self.mao.ESCALA, self.mao.ESCALA)
+        largura = TAMANHO_CARTA[0] * self.mao.ESCALA
+        altura = TAMANHO_CARTA[1] * self.mao.ESCALA
+        x_inicio = self.pilha_compra.x + (self.pilha_compra.largura - largura) / 2
+        y_inicio = self.pilha_compra.y + (self.pilha_compra.altura - altura) / 2
+        verso.set_position(x_inicio, y_inicio)
+        self._carta_compra_animada = {"carta": carta, "imagem": verso}
+
+        audio_compra()
+        Tween.to(verso, "x", carta.x, 0.2, "ease_out")
+        Tween.to(verso, "y", carta.y_repouso, 0.2, "ease_out")
+        Timer.after(0.2, self._finalizar_animacao_compra)
+
+    def _finalizar_animacao_compra(self):
+        self._carta_compra_animada = None
 
     # ------------------------------------------------------------ lógica
     def loop(self):
@@ -103,6 +146,7 @@ class CenaCombate(Scene):
         self._garantir_alvo()
         self._hover = self.mao.atualizar(self.player.baralho.mao, self._pode_agir(),
                                          self.janela.delta_time())
+        self._atualizar_animacao_compra()
         self._cliques()
 
         self.ator_player.update()
@@ -124,17 +168,23 @@ class CenaCombate(Scene):
                 self._animar_acao(evento)
 
         resultado = self._resultado_final()
-        if resultado == "vitoria":
+        if self._usar_tela_resultado_padrao and resultado == "vitoria" and not self._compras_em_andamento():
             self.botao_continuar.update()
             if self.botao_continuar.is_clicked():
+                parar_musica_combate()
                 ir_para_recompensa(self.player)
-        elif resultado == "derrota":
-            self.botao_recomecar.update()
-            if self.botao_recomecar.is_clicked():
-                iniciar_combate()
-
+        elif self._usar_tela_resultado_padrao and resultado == "derrota" and not self._compras_em_andamento():
+            self.botao_menu.update()
+            if self.botao_menu.is_clicked():
+                parar_musica_combate()
+                from menu import CenaMenu
+                from PPlay.scenemanager import SceneManager
+                SceneManager.change_scene(CenaMenu())
 
     def _cliques(self):
+        if self._compras_em_andamento():
+            return
+
         mouse = self.mouse
         if not mouse.button_down(mouse.LEFT):
             return
@@ -148,9 +198,30 @@ class CenaCombate(Scene):
         elif self._hover:
             self._jogar_carta(self._hover)
         elif mouse.is_over_object(self.botao_passar_turno):
+            self._botao_passar_clicado_ate = pygame.time.get_ticks() + 150
             self.gerenciador.terminar_turno_jogador()
         else:
             self._escolher_alvo_com_clique()
+
+    def _desenhar_botao_passar_turno(self):
+        botao = self.botao_passar_turno
+        mouse_sobre = (
+            self._pode_agir()
+            and not self._compras_em_andamento()
+            and self.mouse.is_over_object(botao)
+        )
+        clicado = pygame.time.get_ticks() < self._botao_passar_clicado_ate
+        escala = 0.94 if clicado else 1.08 if mouse_sobre else 1.0
+
+        x, y = botao.x, botao.y
+        botao.set_scale(escala)
+        botao.set_position(
+            x - botao.width * (escala - 1) / 2,
+            y - botao.height * (escala - 1) / 2,
+        )
+        botao.draw()
+        botao.set_position(x, y)
+        botao.set_scale(1)
 
     # se o alvo morreu, passa pro primeiro que ainda tá vivo
     def _garantir_alvo(self):
@@ -173,6 +244,7 @@ class CenaCombate(Scene):
                 print(f"AP insuficiente para jogar {carta.nome}!")
             return
 
+        audio_usar_carta()
         self.mao.organizar(self.player.baralho.mao)
         alvo = self.alvo
         if carta.dano > 0:
@@ -208,22 +280,23 @@ class CenaCombate(Scene):
                 return False
         return True
 
-    def _animar_acao(self, evento):
-        if evento["acao"]["tipo"] != "ataque":
-            return          # escudo: nada toca, o goblin continua no idle
-
-        for inimigo in self.inimigos:
-            if inimigo.status is evento["inimigo"]:
-                inimigo.ator.tocar("attack")
-        self._aguardando_reacao = True
-        Timer.after(0.25, self._player_apanha)
-
     def _resultado_final(self):
         resultado = self.gerenciador.resultado()
         if resultado and self._todos_livres():
             return resultado
         return None
-        # ------------------------------------------------------------ desenho
+
+    def _animar_acao(self, evento):
+        if evento["acao"]["tipo"] != "ataque":
+            return          # escudo: nada toca, o goblin continua no idle
+
+        audio_ataque_inimigo()
+        for inimigo in self.inimigos:
+            if inimigo.status is evento["inimigo"]:
+                inimigo.ator.tocar(evento["acao"].get("animacao") or "attack")
+        self._aguardando_reacao = True
+        Timer.after(0.25, self._player_apanha)
+    # ------------------------------------------------------------ desenho
     def draw(self):
         if self.visualizador.aberta:
             self.visualizador.draw()
@@ -232,10 +305,21 @@ class CenaCombate(Scene):
         baralho = self.player.baralho
         self.fundo.draw()
 
-        self.botao_passar_turno.draw()
+        self._desenhar_botao_passar_turno()
         self.pilha_compra.draw(len(baralho.compra))
         self.pilha_descarte.draw(len(baralho.descarte))
         self.orbe.draw(self.player.ap, self.player.ap_max)
+        efeitos = []
+        if self.player.passivos_inicio.get("forca", 0):
+            efeitos.append(f"+{self.player.passivos_inicio['forca']} FORÇA")
+        if self.player.passivos_inicio.get("escudo", 0):
+            efeitos.append(f"+{self.player.passivos_inicio['escudo']} PROTEÇÃO")
+        if self.player.passivos_inicio.get("compra", 0):
+            efeitos.append(f"COMPRA {self.player.passivos_inicio['compra']}")
+        if self.player.passivos_inicio.get("energia", 0):
+            efeitos.append(f"+{self.player.passivos_inicio['energia']} ENERGIA")
+        if efeitos:
+            centralizado("EM USO: " + " | ".join(efeitos), 92, 2, fonte_pixel.DOURADO)
 
         self.ator_player.draw()
         self.barra_player.draw()
@@ -251,12 +335,22 @@ class CenaCombate(Scene):
         if len(vivos) > 1 and self.alvo in vivos:
             desenhar_seta_alvo(self.alvo.ator.x_centro, self.alvo.barra.barra.y - 50)
 
-        self.mao.draw(baralho.mao, self._hover)
+        cartas_ocultas = set(baralho.compras_pendentes)
+        if self._carta_compra_animada is not None:
+            cartas_ocultas.add(self._carta_compra_animada["carta"])
+        cartas_visiveis = [carta for carta in baralho.mao if carta not in cartas_ocultas]
+        self.mao.draw(cartas_visiveis, self._hover)
+        if self._carta_compra_animada is not None:
+            self._carta_compra_animada["imagem"].draw()
 
-        resultado = self.gerenciador.resultado()
-        if resultado and self._todos_livres():
+        resultado = self._resultado_final()
+        if resultado and self._usar_tela_resultado_padrao:
             centralizado("VITÓRIA" if resultado == "vitoria" else "DERROTA", 200, 8,
                          fonte_pixel.DOURADO if resultado == "vitoria" else fonte_pixel.VERMELHO)
+            if resultado == "vitoria":
+                self.botao_continuar.draw()
+            else:
+                self.botao_menu.draw()
 
         # abre por último pra o "print" da tela já pegar o frame completo
         if self._pilha_pedida == "descarte":
@@ -265,11 +359,3 @@ class CenaCombate(Scene):
             # em ordem alfabética pra não entregar a ordem real das compras
             self.visualizador.abrir("Pilha de compra", sorted(baralho.compra, key=lambda c: c.nome))
         self._pilha_pedida = None
-
-        resultado = self._resultado_final()
-        if resultado == "vitoria":
-            centralizado("VITÓRIA", 200, 8, fonte_pixel.DOURADO)
-            self.botao_continuar.draw()
-        elif resultado == "derrota":
-            centralizado("DERROTA", 200, 8, fonte_pixel.VERMELHO)
-            self.botao_recomecar.draw()

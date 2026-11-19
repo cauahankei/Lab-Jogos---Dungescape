@@ -1,4 +1,4 @@
-# DungEscape — Roguelike de Cartas
+# Dungescape — Roguelike de Cartas
 
 Trabalho desenvolvido para a disciplina de **Laboratório de Desenvolvimento de Jogos**, utilizando o framework **PowerPPlay 2.0 (PPlay)**.
 
@@ -32,13 +32,13 @@ O projeto foi desenvolvido utilizando **exclusivamente o framework PPlay** como 
 
 - [x] Tela de composição de combate (fundo, personagem, inimigo, mão de cartas)
 - [x] Sistema de combate por turnos (vida, bloqueio, dano)
-- [ ] Sistema de cartas (ataque, defesa, habilidades)
-- [ ] Interação de jogar cartas (clique/arraste)
-- [ ] Intenção de ataque dos inimigos
+- [x] Sistema de cartas (ataque, defesa, habilidades)
+- [x] Interação de jogar cartas (clique)
+- [x] Intenção de ataque dos inimigos
 - [ ] Mapa de progressão roguelike (nós de eventos/combate/loja)
-- [ ] Sistema de recompensas entre combates
+- [x] Sistema de recompensas entre combates
 - [ ] Feedback visual (shake, flash, partículas)
-- [ ] Múltiplos inimigos/biomas
+- [x] Múltiplos inimigos
 - [ ] Sistema de save/progressão entre execuções
 
 ## Estrutura do projeto

@@ -68,6 +68,10 @@ class Combatente:
     def recebe_escudo(self, qnt):
         self.escudo += qnt
 
+    def curar(self, qnt):
+        if qnt > 0 and self.is_alive():
+            self.vida = min(self.vida_max, self.vida + qnt)
+
     def is_alive(self):
         return self.vida > 0
 
@@ -79,34 +83,46 @@ class Combatente:
 
 
 class Inimigo(Combatente):
-    def __init__(self, nome, vida, acoes, ator_id):
+    def __init__(self, nome, vida, acoes, ator_id, estrategia=None):
         super().__init__(nome=nome, vida=vida, vida_max=vida)
         self.acoes = acoes
         self.ator_id = ator_id
+        self.estrategia = estrategia
+        self.turno = 1
         self.proxima_acao = None
         self.sortear_acao()      # já nasce sabendo o que vai fazer no 1º turno
 
+    def _sortear_numero(self, valor):
+        if isinstance(valor, tuple):
+            return random.randint(valor[0], valor[1])
+        return valor
+
     def sortear_acao(self):
-        pesos = []
-        for acao in self.acoes:
-            pesos.append(acao["peso"])
-        escolhida = random.choices(self.acoes, weights=pesos)[0]
+        escolhida = self.estrategia(self.turno) if self.estrategia else None
+        if escolhida is None:
+            pesos = [acao["peso"] for acao in self.acoes]
+            escolhida = random.choices(self.acoes, weights=pesos)[0]
         self.proxima_acao = {"tipo": escolhida["tipo"],
                             "valor": self._valor_da_acao(escolhida),
-                            "status": escolhida.get("status")}
+                            "status": escolhida.get("status"),
+                            "cura": escolhida.get("cura", 0),
+                            "animacao": escolhida.get("animacao")}
 
     def _valor_da_acao(self, acao):
         if acao["tipo"] == "ataque":
-            return acao["dano"]
+            return self._sortear_numero(acao["dano"])
         if acao["tipo"] == "escudo":
-            return acao["escudo"]
-        return acao["valor"]          # buff e debuff
-
+            return self._sortear_numero(acao["escudo"])
+        return self._sortear_numero(acao["valor"])      # buff e debuff
 
     def agir(self, alvo):
         acao = self.proxima_acao
         if acao["tipo"] == "ataque":
+            vida_antes = alvo.vida
             alvo.recebe_dano(self.dano_causado(acao["valor"]))
+            dano_efetivo = vida_antes - alvo.vida
+            cura = int(dano_efetivo * acao.get("cura", 0))
+            self.vida = min(self.vida_max, self.vida + cura)
             alvo.retaliar(self)
         elif acao["tipo"] == "escudo":
             self.recebe_escudo(acao["valor"])
@@ -114,6 +130,7 @@ class Inimigo(Combatente):
             alvo.aplicar_status(acao["status"], acao["valor"])
         elif acao["tipo"] == "buff":
             self.aplicar_status(acao["status"], acao["valor"])
+        self.turno += 1
         self.sortear_acao()
         return acao
 
@@ -124,6 +141,16 @@ class Player(Combatente):
         self.ap = ap_max
         self.baralho = baralho
         self.tamanho_mao = tamanho_mao
+        self.passivos_inicio = {}
+
+    def ativar_passivo(self, nome, valor):
+        self.passivos_inicio[nome] = self.passivos_inicio.get(nome, 0) + valor
+
+    def finalizar_batalha(self):
+        self.passivos_inicio = {}
+
+    def dano_causado(self, base):
+        return super().dano_causado(base + self.passivos_inicio.get("forca", 0))
 
     # False (sem gastar nada) se não tiver AP pra pagar a carta
     def gasta_ap(self, custo):
@@ -136,27 +163,56 @@ class Player(Combatente):
     # (se já tiver mais que isso, não compra nada)
     def start_turno(self):
         super().start_turno()
-        self.ap = self.ap_max
+        self.ap = self.ap_max + self.passivos_inicio.get("energia", 0)
+        self.recebe_escudo(self.passivos_inicio.get("escudo", 0))
         if self.baralho is not None:
             self.baralho.comprar(self.tamanho_mao - len(self.baralho.mao))
+            self.baralho.comprar(self.passivos_inicio.get("compra", 0))
 
 
 # ---------------------------------------------------------------
 # Catálogo de inimigos. Pra criar um novo: põe uma linha aqui e as
 # animações dele em ator.py (com o mesmo nome do ator_id).
 # ---------------------------------------------------------------
+def _estrategia_wizard(turno):
+    if turno == 1:
+        return {"tipo": "debuff", "status": "fraqueza", "valor": 5}
+    if turno >= 4 and (turno - 4) % 3 == 0:
+        return {"tipo": "ataque", "dano": (20, 28), "animacao": "attack_forte"}
+    return None
+
+
 INIMIGOS = {
-    "goblin": dict(nome="Goblin", vida=60, ator_id="goblin",
+    "goblin": dict(nome="Goblin", vida=40, ator_id="goblin",
                    acoes=[
-                       {"tipo": "ataque", "dano": 10, "peso": 70},
-                       {"tipo": "escudo", "escudo": 8, "peso": 30},
+                       {"tipo": "ataque", "dano": (8,12), "peso": 60},
+                       {"tipo": "escudo", "escudo": (6,8), "peso": 40},
                    ]),
 
-    "slime": dict(nome="Slime", vida=60, ator_id="slime",
+    "morcegosa": dict(nome="Morcegosa", vida=40, ator_id="morcegosa",
+                      acoes=[
+                          {"tipo": "ataque", "dano": (7,15), "peso": 80, "cura": 0.8},
+                          {"tipo": "escudo", "escudo": (8,10), "peso": 20},
+                      ]),
+
+    "esqueleton": dict(nome="Esqueleton", vida=40, ator_id="esqueleton",
+                       acoes=[
+                           {"tipo": "ataque", "dano": (8,12), "peso": 60},
+                           {"tipo": "escudo", "escudo": (6,8), "peso": 40},
+                       ]),
+
+    "wizard": dict(nome="Wizard", vida=100, ator_id="wizard",
                    acoes=[
-                        {"tipo": "debuff", "status": "fraqueza", "valor": 2, "peso": 40},
-                        {"tipo": "ataque", "dano": 6, "peso": 30},
-                        {"tipo": "escudo", "escudo": 10, "peso": 30},
+                       {"tipo": "ataque", "dano": (12,18), "peso": 70},
+                       {"tipo": "escudo", "escudo": (8,12), "peso": 30},
+                   ],
+                   estrategia=_estrategia_wizard),
+
+    "slime": dict(nome="Slime", vida=50, ator_id="slime",
+                   acoes=[
+                        {"tipo": "debuff", "status": "fraqueza", "valor": 2, "peso": 10},
+                        {"tipo": "ataque", "dano": (4,8), "peso": 50},
+                        {"tipo": "escudo", "escudo": (8,12), "peso": 40},
                    ]),
                    
 }

@@ -32,6 +32,34 @@ ANIMACOES = {
             "attack":  {"arquivo": ("assets", "Slime", "Attack.png"), "frames": 19, "duracao": 600, "loop": False, "depois": "idle"}
         },
     },
+    "esqueleton": {
+        "escala": 5.0,
+        "animacoes": {
+            "idle":    {"arquivo": ("assets", "Skeleton", "Idle.png"),     "frames": 4, "duracao": 600, "loop": True},
+            "takehit": {"arquivo": ("assets", "Skeleton", "Take Hit.png"), "frames": 4, "duracao": 400, "loop": False, "depois": "idle"},
+            "death":   {"arquivo": ("assets", "Skeleton", "Death.png"),    "frames": 4, "duracao": 500, "loop": False},
+            "attack":  {"arquivo": ("assets", "Skeleton", "Attack.png"),   "frames": 8, "duracao": 500, "loop": False, "depois": "idle"}
+        },
+    },
+    "morcegosa": {
+        "escala": 4.0,
+        "animacoes": {
+            "idle":    {"arquivo": ("assets", "Morcegosa", "idle.png"),   "frames": 11, "duracao": 600, "loop": True},
+            "takehit": {"arquivo": ("assets", "Morcegosa", "hurt.png"),   "frames": 3,  "duracao": 400, "loop": False, "depois": "idle"},
+            "death":   {"arquivo": ("assets", "Morcegosa", "death2.png"), "frames": 7,  "duracao": 500, "loop": False},
+            "attack":  {"arquivo": ("assets", "Morcegosa", "attack.png"), "frames": 11, "duracao": 500, "loop": False, "depois": "idle"}
+        },
+    },
+    "wizard": {
+        "escala": 4.0,
+        "animacoes": {
+            "idle":    {"arquivo": ("assets", "wizard", "Idle.png"),     "frames": 8, "duracao": 700, "loop": True},
+            "takehit": {"arquivo": ("assets", "wizard", "Take hit.png"), "frames": 3, "duracao": 400, "loop": False, "depois": "idle"},
+            "death":   {"arquivo": ("assets", "wizard", "Death.png"),    "frames": 7, "duracao": 600, "loop": False},
+            "attack":       {"arquivo": ("assets", "wizard", "Attack1.png"), "frames": 8, "duracao": 700, "loop": False, "depois": "idle"},
+            "attack_forte": {"arquivo": ("assets", "wizard", "Attack2.png"), "frames": 8, "duracao": 800, "loop": False, "depois": "idle"}
+        },
+    },
 }
 
 class AtorAnimado:

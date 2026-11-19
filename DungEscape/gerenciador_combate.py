@@ -8,6 +8,7 @@ class GerenciadorCombate:
         self.fila = []
         self.estado = "turno_jogador"   # ou "turno_inimigos" / "fim"
         self.jogador.limpar_status()    # status de uma luta anterior nao passam pra essa
+        self.jogador.finalizar_batalha()
         self.jogador.start_turno()
         self.sincronizar_cartas()
 
@@ -41,6 +42,7 @@ class GerenciadorCombate:
     def checar_fim(self):
         if self.resultado():
             self.estado = "fim"
+            self.jogador.finalizar_batalha()
 
     def jogar_carta(self, carta, alvo=None):
         if self.estado != "turno_jogador":
@@ -56,7 +58,10 @@ class GerenciadorCombate:
 
         carta.usar(self.jogador, alvo)
         if self.jogador.baralho is not None:
-            self.jogador.baralho.descartar(carta)
+            if carta.temporaria_batalha:
+                self.jogador.baralho.usar_temporaria(carta)
+            else:
+                self.jogador.baralho.descartar(carta)
 
         self.sincronizar_cartas()
         self.checar_fim()
