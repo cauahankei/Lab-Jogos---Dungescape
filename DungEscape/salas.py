@@ -71,7 +71,7 @@ class CenaFogueira(Scene):
         super().__init__()
         player = jornada.player
         self.exibida = _VidaExibida(player, player.vida)
-        cura = player.vida_max * 30 // 100
+        cura = player.vida_max * 60 // 100
         player.vida = min(player.vida_max, player.vida + cura)
         self.curou = player.vida - self.exibida.vida
         Tween.to(self.exibida, "vida", player.vida, 1.4, "ease_out")

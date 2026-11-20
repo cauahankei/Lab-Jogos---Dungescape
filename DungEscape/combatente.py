@@ -188,34 +188,34 @@ def _estrategia_wizard(turno):
 INIMIGOS = {
     "slime": dict(nome="Slime", vida=42, ator_id="slime",
                   acoes=[
-                      {"tipo": "ataque", "dano": (5, 8), "peso": 50},
-                      {"tipo": "escudo", "escudo": (7, 10), "peso": 35},
+                      {"tipo": "ataque", "dano": (5, 8), "peso": 45},
+                      {"tipo": "escudo", "escudo": (7, 10), "peso": 40},
                       {"tipo": "debuff", "status": "fraqueza", "valor": 2, "peso": 15},
                   ]),
 
     "goblin": dict(nome="Goblin", vida=40, ator_id="goblin",
                    acoes=[
-                       {"tipo": "ataque", "dano": (9, 13), "peso": 65},
-                       {"tipo": "escudo", "escudo": (6, 8), "peso": 35},
+                       {"tipo": "ataque", "dano": (8, 12), "peso": 60},
+                       {"tipo": "escudo", "escudo": (6, 8), "peso": 30},
                    ]),
 
-    "morcegosa": dict(nome="Morcegosa", vida=38, ator_id="morcegosa",
+    "morcegosa": dict(nome="Morcegosa", vida=30, ator_id="morcegosa",
                       acoes=[
-                          {"tipo": "ataque", "dano": (8, 13), "peso": 75, "cura": 0.6},
-                          {"tipo": "escudo", "escudo": (6, 8), "peso": 25},
+                          {"tipo": "ataque", "dano": (9, 12), "peso": 75, "cura": 0.5},
+                          {"tipo": "escudo", "escudo": (4, 7), "peso": 25},
                       ]),
 
-    "esqueleton": dict(nome="Esqueleton", vida=60, ator_id="esqueleton",
+    "esqueleton": dict(nome="Esqueleton", vida=55, ator_id="esqueleton",
                        acoes=[
-                           {"tipo": "ataque", "dano": (8, 13), "peso": 55},
-                           {"tipo": "escudo", "escudo": (8, 10), "peso": 30},
+                           {"tipo": "ataque", "dano": (7, 13), "peso": 45},
+                           {"tipo": "escudo", "escudo": (8, 10), "peso": 40},
                            {"tipo": "buff", "status": "forca", "valor": 2, "peso": 15},
                        ]),
 
-    "wizard": dict(nome="Wizard", vida=175, ator_id="wizard",
+    "wizard": dict(nome="Wizard", vida=150, ator_id="wizard",
                    acoes=[
-                       {"tipo": "ataque", "dano": (14, 19), "peso": 65},
-                       {"tipo": "escudo", "escudo": (12, 16), "peso": 35},
+                       {"tipo": "ataque", "dano": (14, 16), "peso": 60},
+                       {"tipo": "escudo", "escudo": (10, 13), "peso": 40},
                    ],
                    estrategia=_estrategia_wizard),
 }
