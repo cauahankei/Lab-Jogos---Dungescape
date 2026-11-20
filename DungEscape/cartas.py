@@ -298,6 +298,10 @@ CARTAS = {
                    descricao="Causa {dano}\nde dano."),
     "defesa": dict(arquivo="carta_defesa.png", nome="Defesa", custo=1, escudo=5,
                    descricao="Ganha {escudo}\nde escudo."),
+    "acrobacia": dict(arquivo="carta_acrobacia.png", nome="Acrobacia", custo=1, escudo=8,
+                      descricao="Ganha {escudo}\nde escudo."),
+    "barricada": dict(arquivo="carta_barricada.png", nome="Barricada", custo=2, escudo=12,
+                      descricao="Ganha {escudo}\nde escudo."),
     "foco": dict(arquivo="carta_foco.png", nome="Foco", custo=1, compra=2,
                  descricao="Compra {compra}\ncartas do\nbaralho."),
     "fortalecer": dict(arquivo="carta_fortalecer.png", nome="Fortalecer", custo=1, forca=1,
@@ -352,7 +356,7 @@ def deck_inicial():
 # Pra criar outro pool (cartas raras de boss, por exemplo) é só preencher a lista.
 POOLS_RECOMPENSA = {
     "normal": ["foco", "fortalecer", "golpe_baixo", "corte_rapido", "corte_duplo",
-               "contra_ataque", "bater_defender", "golpe_pesado"],
+               "contra_ataque", "bater_defender", "golpe_pesado", "acrobacia", "barricada"],
     "elite": [],
     "boss": [],
 }
