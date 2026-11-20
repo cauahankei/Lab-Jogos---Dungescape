@@ -3,18 +3,23 @@ from PPlay.window import Window
 from PPlay.effects import LightingSystem
 import math
 
+
+def pixelizar_imagem(imagem, fator=4):
+    largura, altura = imagem.get_size()
+    tamanho_reduzido = (
+        max(1, largura // fator),
+        max(1, altura // fator),
+    )
+    reduzida = pygame.transform.scale(imagem, tamanho_reduzido)
+    return pygame.transform.scale(reduzida, (largura, altura))
+
+
 class FundoCombate:
     FATOR_PIXELACAO = 4
 
     def __init__(self, caminho):
         imagem = pygame.image.load(caminho).convert_alpha()
-        largura, altura = imagem.get_size()
-        tamanho_reduzido = (
-            max(1, largura // self.FATOR_PIXELACAO),
-            max(1, altura // self.FATOR_PIXELACAO),
-        )
-        reduzida = pygame.transform.scale(imagem, tamanho_reduzido)
-        self.imagem = pygame.transform.scale(reduzida, (largura, altura))
+        self.imagem = pixelizar_imagem(imagem, self.FATOR_PIXELACAO)
 
         self.iluminacao = LightingSystem()
 

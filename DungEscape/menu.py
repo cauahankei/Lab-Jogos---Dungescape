@@ -1,8 +1,10 @@
+import pygame
 from PPlay.scenemanager import Scene, SceneManager
 from PPlay.sprite import Sprite
 from PPlay.uikit import Button, ProgressBar
 from PPlay.window import Window
 from utils import asset_path
+from efeitos_visuais import FundoCombate, pixelizar_imagem
 from sons import (
     definir_volume_geral,
     iniciar_musica_menu,
@@ -14,19 +16,30 @@ import fonte_pixel
 
 
 class CenaComBackground(Scene):
-    def __init__(self):
+    def __init__(self, caminho_background=None, pixelizado=False):
         super().__init__()
-        self.background = Sprite(
-            asset_path("assets", "Background", "background.png")
+        caminho_background = caminho_background or asset_path(
+            "assets", "Background", "background.png"
         )
-        self.background.set_position(0, 0)
-        self.background.set_scale(
-            self.janela.largura / self.background.width,
-            self.janela.altura / self.background.height,
-        )
+        if pixelizado:
+            imagem = pygame.image.load(caminho_background).convert_alpha()
+            imagem = pixelizar_imagem(imagem, FundoCombate.FATOR_PIXELACAO)
+            self.background = pygame.transform.scale(
+                imagem, (self.janela.largura, self.janela.altura)
+            )
+        else:
+            self.background = Sprite(caminho_background)
+            self.background.set_position(0, 0)
+            self.background.set_scale(
+                self.janela.largura / self.background.width,
+                self.janela.altura / self.background.height,
+            )
 
     def desenhar_background(self):
-        self.background.draw()
+        if isinstance(self.background, pygame.Surface):
+            Window.get_screen().blit(self.background, (0, 0))
+        else:
+            self.background.draw()
 
 
 def criar_botao(texto, x, y):
@@ -35,9 +48,41 @@ def criar_botao(texto, x, y):
     return botao
 
 
+class BotaoImagem(Button):
+    ESCALA = 2
+
+    def __init__(self, caminho):
+        self.imagem = pygame.image.load(caminho).convert_alpha()
+        largura, altura = self.imagem.get_size()
+        super().__init__(largura * self.ESCALA, altura * self.ESCALA)
+
+    def draw(self):
+        escala = 0.96 if self.pressed else 1.06 if self.hovered else 1
+        tamanho = (
+            max(1, int(self.width * escala)),
+            max(1, int(self.height * escala)),
+        )
+        imagem = pygame.transform.scale(self.imagem, tamanho)
+
+        if self.pressed:
+            imagem.fill((205, 205, 205), special_flags=pygame.BLEND_RGB_MULT)
+        elif self.hovered:
+            imagem.fill((20, 20, 20), special_flags=pygame.BLEND_RGB_ADD)
+
+        retangulo = imagem.get_rect(
+            center=(self.x + self.width / 2, self.y + self.height / 2)
+        )
+        Window.get_screen().blit(imagem, retangulo)
+
+
 class CenaMenu(CenaComBackground):
+    ignorar_esc_menu = True
+
     def __init__(self):
-        super().__init__()
+        super().__init__(
+            asset_path("assets", "Background", "Fundo_menu2.png"),
+            pixelizado=True,
+        )
         iniciar_musica_menu()
         self.janela = Window.get_instance()
         self.logo = Sprite(asset_path("assets", "Background", "logo.png"))
@@ -47,13 +92,22 @@ class CenaMenu(CenaComBackground):
             self.janela.altura * 0.12,
         )
 
-        x = (self.janela.largura - 220) / 2
-        self.jogar = criar_botao("JOGAR", x, self.janela.altura / 2)
-        self.configuracoes = criar_botao(
-            "CONFIGURACOES", x, self.janela.altura / 2 + 64
+        self.jogar = BotaoImagem(
+            asset_path("assets", "Background", "Play.png")
         )
-        self.sair = criar_botao("SAIR", x, self.janela.altura / 2 + 128)
+        self.configuracoes = BotaoImagem(
+            asset_path("assets", "Background", "Gear.png")
+        )
+        self.sair = BotaoImagem(
+            asset_path("assets", "Background", "Exit.png")
+        )
         self.botoes = [self.jogar, self.configuracoes, self.sair]
+        y = self.janela.altura * 0.42
+        for indice, botao in enumerate(self.botoes):
+            botao.set_position(
+                (self.janela.largura - botao.width) / 2,
+                y + indice * (botao.height + 10),
+            )
 
     def loop(self):
         for botao in self.botoes:
